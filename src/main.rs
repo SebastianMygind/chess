@@ -1,3 +1,6 @@
+mod chessboard;
+mod legal_moves;
+mod tests;
 fn main() {
-    println!("Hello, world!");
+    chessboard::test_hello();
 }
