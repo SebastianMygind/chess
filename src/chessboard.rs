@@ -1,3 +1,11 @@
+use crate::fen::implementation::{
+    parse_castling_ability, parse_epawn, parse_fen_part, parse_file, parse_position, parse_rank,
+    parse_side_to_move, parse_string_to_num,
+};
+use crate::fen::{FEN_STARTING_POSITION, Fen, FenArguments, FenError, FenType};
+
+use std::fmt;
+
 pub const BOARD_HEIGHT: usize = 8;
 pub const BOARD_WIDTH: usize = 8;
 
@@ -67,4 +75,74 @@ pub struct Move {
 
 pub fn test_hello() {
     println!("Hello test!");
+}
+
+impl Fen for ChessBoard {
+    fn set_fen_position(fen: &str) -> Result<ChessBoard, FenError> {
+        let fen_type = Self::validate_fen(fen)?;
+
+        let mut fen_state = fen.split(" ");
+
+        let board = parse_fen_part(&mut fen_state, parse_position, FenArguments::Position)?;
+
+        let side_to_move =
+            parse_fen_part(&mut fen_state, parse_side_to_move, FenArguments::SideToMove)?;
+
+        let castling_ability = parse_fen_part(
+            &mut fen_state,
+            parse_castling_ability,
+            FenArguments::CastlingAbility,
+        )?;
+
+        let en_passant_target_square = parse_fen_part(
+            &mut fen_state,
+            parse_epawn,
+            FenArguments::EnPassantTargetSquare,
+        )?;
+
+        if fen_type == FenType::NoCounter {
+            return Ok(Self {
+                board,
+                side_to_move,
+                castling_ability,
+                en_passant_target_square,
+                half_move_clock: 0,
+                full_move_counter: 0,
+            });
+        }
+
+        let half_move_clock = parse_fen_part(
+            &mut fen_state,
+            parse_string_to_num,
+            FenArguments::HalfMoveClock,
+        )?;
+
+        let full_move_counter = parse_fen_part(
+            &mut fen_state,
+            parse_string_to_num,
+            FenArguments::FullMoveCounter,
+        )?;
+
+        Ok(Self {
+            board,
+            side_to_move,
+            castling_ability,
+            en_passant_target_square,
+            half_move_clock,
+            full_move_counter,
+        })
+    }
+}
+
+impl Default for ChessBoard {
+    fn default() -> Self {
+        Self::set_fen_position(FEN_STARTING_POSITION)
+            .expect("Starting position should be valid and parsable!")
+    }
+}
+
+impl fmt::Display for ChessBoard {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        todo!()
+    }
 }
