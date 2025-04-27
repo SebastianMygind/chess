@@ -7,7 +7,16 @@ pub const KIWI_PETE: &str = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::fen::{FEN_STARTING_POSITION, Fen, FenArguments, FenError, FenErrorKind, FenType};
+    use crate::{
+        chessboard::{
+            BBISHOP, BKING, BKNIGHT, BPAWN, BQUEEN, BROOK, EMPTY, WBISHOP, WKING, WKNIGHT, WPAWN,
+            WQUEEN, WROOK,
+        },
+        fen::{
+            FEN_STARTING_POSITION, Fen, FenArguments, FenError, FenErrorKind, FenType,
+            parsing::PositionIterator,
+        },
+    };
 
     struct TestFenConverter;
 
@@ -99,5 +108,74 @@ mod tests {
                 String::from("")
             ))
         )
+    }
+
+    #[test]
+    fn fen_position_iterator() {
+        let pos_iter = PositionIterator {
+            empty_remainder: Some(5),
+            chars: "K".chars(),
+        };
+
+        let collected: Vec<i8> = pos_iter.collect();
+
+        assert_eq!(collected, vec![EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, WKING])
+    }
+
+    #[test]
+    fn fen_position_iterator_with_slash() {
+        let pos_iter = PositionIterator {
+            empty_remainder: Some(5),
+            chars: "/K".chars(),
+        };
+
+        let collected: Vec<i8> = pos_iter.collect();
+
+        assert_eq!(collected, vec![EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, WKING])
+    }
+
+    #[test]
+    fn test_pos_iter_correct_length() {
+        let pos_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
+
+        let pos_iter = PositionIterator {
+            empty_remainder: None,
+            chars: pos_fen.chars(),
+        };
+
+        let collected: Vec<i8> = pos_iter.collect();
+
+        assert_eq!(collected.len(), 64)
+    }
+
+    #[test]
+    fn test_pos_iter_with_start_pos() {
+        let pos_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
+
+        let pos_iter = PositionIterator {
+            empty_remainder: None,
+            chars: pos_fen.chars(),
+        };
+
+        let collected: Vec<i8> = pos_iter.collect();
+
+        let mut corrected_collection: Vec<i8> = Vec::with_capacity(64);
+
+        for i in (0..=7).rev() {
+            for j in 0..=7 {
+                corrected_collection.push(collected[i * 8 + j])
+            }
+        }
+
+        let expected_board = vec![
+            WROOK, WKNIGHT, WBISHOP, WQUEEN, WKING, WBISHOP, WKNIGHT, WROOK, WPAWN, WPAWN, WPAWN,
+            WPAWN, WPAWN, WPAWN, WPAWN, WPAWN, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
+            EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
+            EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
+            EMPTY, BPAWN, BPAWN, BPAWN, BPAWN, BPAWN, BPAWN, BPAWN, BPAWN, BROOK, BKNIGHT, BBISHOP,
+            BQUEEN, BKING, BBISHOP, BKNIGHT, BROOK,
+        ];
+
+        assert_eq!(corrected_collection, expected_board)
     }
 }

@@ -6,7 +6,7 @@ use validation::{
 use crate::chessboard::ChessBoard;
 use std::fmt::Formatter;
 
-pub mod implementation;
+pub mod parsing;
 mod validation;
 
 #[derive(Debug, PartialEq)]

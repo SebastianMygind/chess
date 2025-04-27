@@ -1,6 +1,6 @@
-use crate::fen::implementation::{
-    parse_castling_ability, parse_epawn, parse_fen_part, parse_file, parse_position, parse_rank,
-    parse_side_to_move, parse_string_to_num,
+use crate::fen::parsing::{
+    parse_castling_ability, parse_epawn, parse_fen_part, parse_position, parse_side_to_move,
+    parse_string_to_num,
 };
 use crate::fen::{FEN_STARTING_POSITION, Fen, FenArguments, FenError, FenType};
 
@@ -73,15 +73,11 @@ pub struct Move {
     pub dy: i8,
 }
 
-pub fn test_hello() {
-    println!("Hello test!");
-}
-
 impl Fen for ChessBoard {
     fn set_fen_position(fen: &str) -> Result<ChessBoard, FenError> {
         let fen_type = Self::validate_fen(fen)?;
 
-        let mut fen_state = fen.split(" ");
+        let mut fen_state = fen.split(" ").filter(|str| !str.is_empty());
 
         let board = parse_fen_part(&mut fen_state, parse_position, FenArguments::Position)?;
 
@@ -141,8 +137,82 @@ impl Default for ChessBoard {
     }
 }
 
+const T_LINE: &str = "┌—————┬—————┬—————┬—————┬—————┬—————┬—————┬—————┐\n";
+const H_LINE: &str = "|—————|—————|—————|—————|—————|—————|—————|—————|\n";
+const B_LINE: &str = "└—————┴—————┴—————┴—————┴—————┴—————┴—————┴—————┘\n";
+
 impl fmt::Display for ChessBoard {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        todo!()
+        let rank_strings = parse_chessboard_to_string(&self.board);
+
+        write!(
+            f,
+            "{}{}\n{}{}\n{}{}\n{}{}\n{}{}\n{}{}\n{}{}\n{}{}\n{}",
+            T_LINE,
+            rank_strings[7],
+            H_LINE,
+            rank_strings[6],
+            H_LINE,
+            rank_strings[5],
+            H_LINE,
+            rank_strings[4],
+            H_LINE,
+            rank_strings[3],
+            H_LINE,
+            rank_strings[2],
+            H_LINE,
+            rank_strings[1],
+            H_LINE,
+            rank_strings[0],
+            B_LINE
+        )
+    }
+}
+
+fn parse_chessboard_to_string(board: &[i8]) -> Vec<String> {
+    let mut printable_board = Vec::new();
+
+    for rank in 0..=7 {
+        let mut pieces: Vec<char> = Vec::new();
+
+        for file in 0..=7 {
+            let index = (rank * 8) + file;
+            pieces.push(piece_to_char(board[index]));
+        }
+
+        let rank_string: String = format!(
+            "|  {}  |  {}  |  {}  |  {}  |  {}  |  {}  |  {}  |  {}  |",
+            pieces[0], pieces[1], pieces[2], pieces[3], pieces[4], pieces[5], pieces[6], pieces[7],
+        );
+
+        printable_board.push(rank_string);
+    }
+
+    printable_board
+}
+
+fn piece_to_char(piece: i8) -> char {
+    match piece {
+        WPAWN => 'P',
+        BPAWN => 'p',
+
+        WBISHOP => 'B',
+        BBISHOP => 'b',
+
+        WKNIGHT => 'N',
+        BKNIGHT => 'n',
+
+        WROOK => 'R',
+        BROOK => 'r',
+
+        WQUEEN => 'Q',
+        BQUEEN => 'q',
+
+        WKING => 'K',
+        BKING => 'k',
+
+        EMPTY => ' ',
+
+        _ => unreachable!("Illegal character in board!"),
     }
 }
