@@ -91,8 +91,6 @@ impl<'a> Iterator for PositionIterator<'a> {
 pub fn parse_position(str_part: &str) -> Option<[i8; 64]> {
     let mut board = [EMPTY; BOARD_WIDTH * BOARD_HEIGHT];
 
-    println!("{str_part}");
-
     let mut position_iterator = PositionIterator {
         empty_remainder: None,
         chars: str_part.chars(),
