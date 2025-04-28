@@ -68,6 +68,7 @@ pub struct ChessBoard {
     full_move_counter: u32,
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct Move {
     pub dx: i8,
     pub dy: i8,
