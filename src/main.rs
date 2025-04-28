@@ -1,11 +1,12 @@
+mod chess_game;
 mod chessboard;
 mod fen;
 mod legal_moves;
 mod tests;
+use chess_game::ChessGame;
 
-use chessboard::ChessBoard;
+fn main() -> iced::Result {
+    let mut game = ChessGame::default();
 
-fn main() {
-    let chess_board = ChessBoard::default();
-    println!("{chess_board}");
+    game.run()
 }

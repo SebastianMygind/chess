@@ -25,12 +25,14 @@ const DIAGONAL_MOVES: [Move; 4] = [
     Move { dx: 1, dy: -1 },
     Move { dx: -1, dy: -1 },
 ];
+
 const ANTI_DIAGONAL_MOVES: [Move; 4] = [
     Move { dx: 1, dy: 0 },
     Move { dx: -1, dy: 0 },
     Move { dx: 0, dy: 1 },
     Move { dx: 0, dy: -1 },
 ];
+
 const ALL_DIRECTION_MOVES: [Move; 8] = concat_const_arrays(DIAGONAL_MOVES, ANTI_DIAGONAL_MOVES);
 
 pub fn get_new_position(current_board_position: usize, chess_move: Move) -> Option<i8> {

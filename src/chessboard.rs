@@ -54,13 +54,15 @@ pub const MAIL_BOX_64: [i8; 64] = [
     81, 82, 83, 84, 85, 86, 87, 88, 91, 92, 93, 94, 95, 96, 97, 98,
 ];
 
+#[derive(Debug, Clone, Copy)]
 pub enum Players {
     White,
     Black,
 }
 
+#[derive(Debug, Clone)]
 pub struct ChessBoard {
-    board: [i8; BOARD_WIDTH * BOARD_HEIGHT],
+    pub board: [i8; BOARD_WIDTH * BOARD_HEIGHT],
     side_to_move: Players,
     castling_ability: [bool; 4], /* WKing, WQueen, BKing, BQueen */
     en_passant_target_square: Option<i8>,
