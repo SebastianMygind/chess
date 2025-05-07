@@ -1,6 +1,6 @@
 use crate::chessboard::{ChessBoard, Players};
 use iced;
-use iced::widget::svg;
+use iced::widget::{button, column, container, row, svg, text};
 use iced::{Element, Fill};
 
 #[derive(Debug, Clone, Copy)]
@@ -59,14 +59,16 @@ impl Default for SvgPieces {
 pub struct ChessGame {
     game: Option<ChessBoard>,
     perspective: Players,
+    selected_square: Option<usize>,
     piece_sprite: SvgPieces,
 }
 
 impl Default for ChessGame {
     fn default() -> Self {
         Self {
-            game: Some(ChessBoard::default()),
+            game: None,
             perspective: Players::White,
+            selected_square: None,
             piece_sprite: SvgPieces::default(),
         }
     }
@@ -84,6 +86,7 @@ impl ChessGame {
                 Some(mut game) => {
                     game.board[to] = game.board[from];
                     game.board[from] = 0;
+                    self.game = Some(game);
                 }
             },
         }
@@ -98,12 +101,43 @@ impl ChessGame {
 
         let svg = svg(handle).height(Fill).width(Fill);
 
-        svg.into()
+        match &self.game {
+            Some(_game) => match &self.perspective {
+                Players::White => {
+                    let cols: iced::widget::Column<Message> = iced::widget::Column::new();
+
+                    let cols = cols.push(text("first"));
+                    let cols = cols.push(text("last"));
+
+                    container(cols).into()
+                }
+                Players::Black => svg.into(),
+            },
+            None => {
+                let starting_text = text("Starting screen!");
+
+                let button = button(text("start game!")).on_press(Message::Start);
+
+                column![starting_text, button].into()
+            }
+        }
     }
 
     pub fn run(&mut self) -> iced::Result {
         iced::application("Chess", ChessGame::update, ChessGame::view)
             .theme(ChessGame::theme)
             .run()
+    }
+}
+
+pub fn should_be_light_square(position: usize) -> bool {
+    let row = (position / 8) + 1;
+
+    let col = (position % 8) + 1;
+
+    if row % 2 == 0 {
+        col % 2 != 0
+    } else {
+        col % 2 == 0
     }
 }
