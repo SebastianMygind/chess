@@ -1,13 +1,16 @@
-use crate::chessboard::{ChessBoard, Players};
+use crate::chessboard::{
+    BBISHOP, BKING, BKNIGHT, BPAWN, BQUEEN, BROOK, ChessBoard, EMPTY, Players, WBISHOP, WKING,
+    WKNIGHT, WPAWN, WQUEEN, WROOK,
+};
 use iced;
-use iced::widget::{button, column, container, row, svg, text};
+use iced::widget::{Row, button, column, container, row, svg, text};
 use iced::{Element, Fill};
 
 #[derive(Debug, Clone, Copy)]
 pub enum Message {
     Start,
     Reset,
-    Move((usize, usize)),
+    ClickedSquare(usize),
 }
 
 pub struct SvgPieces {
@@ -56,6 +59,34 @@ impl Default for SvgPieces {
     }
 }
 
+impl SvgPieces {
+    pub fn to_iced_svg(&self, square: i8) -> iced::widget::Svg<'_> {
+        let handle = svg::Handle::from_memory(match square {
+            WKING => self.white_king,
+            BKING => self.black_king,
+
+            WQUEEN => self.white_queen,
+            BQUEEN => self.black_queen,
+
+            WROOK => self.white_rook,
+            BROOK => self.black_rook,
+
+            WBISHOP => self.white_bishop,
+            BBISHOP => self.black_bishop,
+
+            WKNIGHT => self.white_knight,
+            BKNIGHT => self.black_knight,
+
+            WPAWN => self.white_pawn,
+            BPAWN => self.black_pawn,
+
+            _ => unreachable!("Should always give valid peace to function!"),
+        });
+
+        svg(handle)
+    }
+}
+
 pub struct ChessGame {
     game: Option<ChessBoard>,
     perspective: Players,
@@ -79,15 +110,19 @@ impl ChessGame {
         match msg {
             Message::Start => self.game = Some(ChessBoard::default()),
             Message::Reset => self.game = Some(ChessBoard::default()),
-            Message::Move((from, to)) => match self.game.clone() {
-                None => {
-                    unreachable!("Should only be able to move when initialized!")
-                }
-                Some(mut game) => {
-                    game.board[to] = game.board[from];
-                    game.board[from] = 0;
-                    self.game = Some(game);
-                }
+            Message::ClickedSquare(square) => match self.selected_square {
+                None => self.selected_square = Some(square),
+                Some(from) => match self.game.clone() {
+                    None => {
+                        unreachable!("Should only be able to move when initialized!")
+                    }
+                    Some(mut game) => {
+                        game.board[square] = game.board[from];
+                        game.board[from] = 0;
+                        self.game = Some(game);
+                        self.selected_square = None;
+                    }
+                },
             },
         }
     }
@@ -97,21 +132,24 @@ impl ChessGame {
     }
 
     pub fn view(&self) -> Element<'_, Message> {
-        let handle = svg::Handle::from_memory(self.piece_sprite.white_queen);
-
-        let svg = svg(handle).height(Fill).width(Fill);
-
         match &self.game {
-            Some(_game) => match &self.perspective {
+            Some(game) => match &self.perspective {
                 Players::White => {
-                    let cols: iced::widget::Column<Message> = iced::widget::Column::new();
+                    let mut board_columns = iced::widget::Column::new();
+                    let mut board_rows = iced::widget::Row::new();
 
-                    let cols = cols.push(text("first"));
-                    let cols = cols.push(text("last"));
+                    for (i, square) in game.board.iter().enumerate() {
+                        board_rows =
+                            board_rows.push(get_button_from_square(i, *square, &self.piece_sprite));
+                        if i % 8 == 7 {
+                            board_columns = board_columns.push(board_rows);
+                            board_rows = Row::new();
+                        }
+                    }
 
-                    container(cols).into()
+                    container(board_columns).height(Fill).into()
                 }
-                Players::Black => svg.into(),
+                Players::Black => text("black pieces perspective: TODO!").into(),
             },
             None => {
                 let starting_text = text("Starting screen!");
@@ -127,6 +165,22 @@ impl ChessGame {
         iced::application("Chess", ChessGame::update, ChessGame::view)
             .theme(ChessGame::theme)
             .run()
+    }
+}
+
+fn get_button_from_square(
+    position: usize,
+    square: i8,
+    pieces: &SvgPieces,
+) -> iced::widget::Button<Message> {
+    match square {
+        WKING | BKING | WQUEEN | BQUEEN | WROOK | BROOK | WBISHOP | BBISHOP | WKNIGHT | BKNIGHT
+        | WPAWN | BPAWN => {
+            button(pieces.to_iced_svg(square)).on_press(Message::ClickedSquare(position))
+        }
+
+        EMPTY => button(text(" ")).on_press(Message::ClickedSquare(position)),
+        _ => unreachable!("not allowed as square type/value"),
     }
 }
 
