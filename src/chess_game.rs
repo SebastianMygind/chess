@@ -2,8 +2,8 @@ use crate::chessboard::{
     BBISHOP, BKING, BKNIGHT, BPAWN, BQUEEN, BROOK, ChessBoard, EMPTY, Players, WBISHOP, WKING,
     WKNIGHT, WPAWN, WQUEEN, WROOK,
 };
-use iced;
 use iced::widget::{Row, button, column, container, row, svg, text};
+use iced::{self, ContentFit};
 use iced::{Element, Fill};
 
 #[derive(Debug, Clone, Copy)]
@@ -154,7 +154,10 @@ impl ChessGame {
             None => {
                 let starting_text = text("Starting screen!");
 
-                let button = button(text("start game!")).on_press(Message::Start);
+                let button = button(text("start game!"))
+                    .width(Fill)
+                    .height(Fill)
+                    .on_press(Message::Start);
 
                 column![starting_text, button].into()
             }
@@ -175,11 +178,21 @@ fn get_button_from_square(
 ) -> iced::widget::Button<Message> {
     match square {
         WKING | BKING | WQUEEN | BQUEEN | WROOK | BROOK | WBISHOP | BBISHOP | WKNIGHT | BKNIGHT
-        | WPAWN | BPAWN => {
-            button(pieces.to_iced_svg(square)).on_press(Message::ClickedSquare(position))
-        }
+        | WPAWN | BPAWN => button(
+            pieces
+                .to_iced_svg(square)
+                .width(Fill)
+                .height(Fill)
+                .content_fit(ContentFit::Cover),
+        )
+        .width(Fill)
+        .height(Fill)
+        .on_press(Message::ClickedSquare(position)),
 
-        EMPTY => button(text(" ")).on_press(Message::ClickedSquare(position)),
+        EMPTY => button(text(" "))
+            .width(Fill)
+            .height(Fill)
+            .on_press(Message::ClickedSquare(position)),
         _ => unreachable!("not allowed as square type/value"),
     }
 }
