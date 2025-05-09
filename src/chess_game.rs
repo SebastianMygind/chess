@@ -3,12 +3,13 @@ use crate::chessboard::{
     WKNIGHT, WPAWN, WQUEEN, WROOK,
 };
 use iced::widget::{Row, button, column, container, row, svg, text};
-use iced::{self, ContentFit};
-use iced::{Element, Fill};
+use iced::{self, ContentFit, Pixels};
+use iced::{Element, Fill, Task};
 
 #[derive(Debug, Clone, Copy)]
 pub enum Message {
     Start,
+    Quit,
     Reset,
     ClickedSquare(usize),
 }
@@ -106,12 +107,18 @@ impl Default for ChessGame {
 }
 
 impl ChessGame {
-    pub fn update(&mut self, msg: Message) {
+    pub fn update(&mut self, msg: Message) -> Task<Message> {
         match msg {
-            Message::Start => self.game = Some(ChessBoard::default()),
-            Message::Reset => self.game = Some(ChessBoard::default()),
+            Message::Start | Message::Reset => {
+                self.game = Some(ChessBoard::default());
+                Task::none()
+            }
             Message::ClickedSquare(square) => match self.selected_square {
-                None => self.selected_square = Some(square),
+                None => {
+                    self.selected_square = Some(square);
+
+                    Task::none()
+                }
                 Some(from) => match self.game.clone() {
                     None => {
                         unreachable!("Should only be able to move when initialized!")
@@ -121,9 +128,11 @@ impl ChessGame {
                         game.board[from] = 0;
                         self.game = Some(game);
                         self.selected_square = None;
+                        Task::none()
                     }
                 },
             },
+            Message::Quit => iced::exit(),
         }
     }
 
@@ -133,33 +142,33 @@ impl ChessGame {
 
     pub fn view(&self) -> Element<'_, Message> {
         match &self.game {
-            Some(game) => match &self.perspective {
-                Players::White => {
-                    let mut board_columns = iced::widget::Column::new();
-                    let mut board_rows = iced::widget::Row::new();
+            Some(_) => {
+                let board = render_board(&self);
 
-                    for (i, square) in game.board.iter().enumerate() {
-                        board_rows =
-                            board_rows.push(get_button_from_square(i, *square, &self.piece_sprite));
-                        if i % 8 == 7 {
-                            board_columns = board_columns.push(board_rows);
-                            board_rows = Row::new();
-                        }
-                    }
-
-                    container(board_columns).height(Fill).into()
-                }
-                Players::Black => text("black pieces perspective: TODO!").into(),
-            },
+                container(board).height(Fill).padding([50., 50.]).into()
+            }
             None => {
-                let starting_text = text("Starting screen!");
+                let starting_text = container(
+                    text("Starting screen!")
+                        .center()
+                        .width(Fill)
+                        .size(Pixels::from(60)),
+                )
+                .padding(iced::Padding::from([50., 50.]));
 
-                let button = button(text("start game!"))
+                let start_button = button(text("start game!"))
                     .width(Fill)
                     .height(Fill)
                     .on_press(Message::Start);
 
-                column![starting_text, button].into()
+                let exit_button = button(text("Quit"))
+                    .width(Fill)
+                    .height(Fill)
+                    .on_press(Message::Quit);
+
+                container(column![starting_text, row![start_button, exit_button]])
+                    .padding(iced::Padding::from([100., 100.]))
+                    .into()
             }
         }
     }
@@ -171,10 +180,35 @@ impl ChessGame {
     }
 }
 
+fn render_board(state: &ChessGame) -> iced::widget::Column<'_, Message> {
+    let mut board_columns = iced::widget::Column::new();
+    let mut board_rows = iced::widget::Row::new();
+
+    let board_state = state
+        .game
+        .clone()
+        .expect("Expect the board here from callin function!");
+
+    for i in 0..64 {
+        board_rows = board_rows.push(get_button_from_square(
+            i,
+            board_state.board[get_corrected_index(i, state.perspective)],
+            &state.piece_sprite,
+            state.perspective,
+        ));
+        if i % 8 == 7 {
+            board_columns = board_columns.push(board_rows);
+            board_rows = Row::new();
+        }
+    }
+    board_columns
+}
+
 fn get_button_from_square(
     position: usize,
     square: i8,
     pieces: &SvgPieces,
+    perspective: Players,
 ) -> iced::widget::Button<Message> {
     match square {
         WKING | BKING | WQUEEN | BQUEEN | WROOK | BROOK | WBISHOP | BBISHOP | WKNIGHT | BKNIGHT
@@ -187,13 +221,36 @@ fn get_button_from_square(
         )
         .width(Fill)
         .height(Fill)
-        .on_press(Message::ClickedSquare(position)),
+        .on_press(Message::ClickedSquare(get_corrected_index(
+            position,
+            perspective,
+        ))),
 
         EMPTY => button(text(" "))
             .width(Fill)
             .height(Fill)
-            .on_press(Message::ClickedSquare(position)),
+            .on_press(Message::ClickedSquare(get_corrected_index(
+                position,
+                perspective,
+            ))),
         _ => unreachable!("not allowed as square type/value"),
+    }
+}
+
+fn get_corrected_index(index: usize, perspective: Players) -> usize {
+    match perspective {
+        Players::White => {
+            let column = 7 - (index / 8);
+            let row = index % 8;
+
+            row + (column * 8)
+        }
+        Players::Black => {
+            let column = index / 8;
+            let row = index % 8;
+
+            row + (column * 8)
+        }
     }
 }
 
