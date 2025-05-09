@@ -3,8 +3,82 @@ use crate::chessboard::{
     WKNIGHT, WPAWN, WQUEEN, WROOK,
 };
 use iced::widget::{Row, button, column, container, row, svg, text};
-use iced::{self, ContentFit, Pixels};
+use iced::{self, Color, ContentFit, Pixels};
+use iced::{Background, Border, Shadow};
 use iced::{Element, Fill, Task};
+type BStyle = iced::widget::button::Style;
+
+struct WhiteSquareStyle;
+struct BlackSquareStyle;
+
+impl WhiteSquareStyle {
+    fn style(_theme: &iced::Theme, status: button::Status) -> button::Style {
+        let white_square: BStyle = BStyle {
+            background: Some(Background::Color(Color {
+                r: 240.,
+                g: 217.,
+                b: 181.,
+                a: 1.,
+            })),
+            text_color: Color::default(),
+            border: Border::default(),
+            shadow: Shadow::default(),
+        };
+        let white_square_active: BStyle = BStyle {
+            background: Some(Background::Color(Color {
+                r: 240.,
+                g: 217.,
+                b: 181.,
+                a: 0.4,
+            })),
+            text_color: Color::default(),
+            border: Border::default(),
+            shadow: Shadow::default(),
+        };
+
+        match status {
+            button::Status::Active | button::Status::Hovered | button::Status::Pressed => {
+                white_square_active
+            }
+            button::Status::Disabled => white_square,
+        }
+    }
+}
+
+impl BlackSquareStyle {
+    fn style(_theme: &iced::Theme, status: button::Status) -> button::Style {
+        let black_square: BStyle = BStyle {
+            background: Some(Background::Color(Color {
+                r: 181.,
+                g: 136.,
+                b: 99.,
+                a: 0.,
+            })),
+            text_color: Color::default(),
+            border: Border::default(),
+            shadow: Shadow::default(),
+        };
+
+        let black_square_active: BStyle = BStyle {
+            background: Some(Background::Color(Color {
+                r: 181.,
+                g: 136.,
+                b: 99.,
+                a: 0.4,
+            })),
+            text_color: Color::default(),
+            border: Border::default(),
+            shadow: Shadow::default(),
+        };
+
+        match status {
+            button::Status::Active | button::Status::Hovered | button::Status::Pressed => {
+                black_square_active
+            }
+            button::Status::Disabled => black_square,
+        }
+    }
+}
 
 #[derive(Debug, Clone, Copy)]
 pub enum Message {
@@ -166,9 +240,12 @@ impl ChessGame {
                     .height(Fill)
                     .on_press(Message::Quit);
 
-                container(column![starting_text, row![start_button, exit_button]])
-                    .padding(iced::Padding::from([100., 100.]))
-                    .into()
+                container(column![
+                    starting_text,
+                    row![start_button, exit_button].spacing(10)
+                ])
+                .padding(iced::Padding::from([100., 100.]))
+                .into()
             }
         }
     }
@@ -210,7 +287,9 @@ fn get_button_from_square(
     pieces: &SvgPieces,
     perspective: Players,
 ) -> iced::widget::Button<Message> {
-    match square {
+    let correct_index = get_corrected_index(position, perspective);
+
+    let button = match square {
         WKING | BKING | WQUEEN | BQUEEN | WROOK | BROOK | WBISHOP | BBISHOP | WKNIGHT | BKNIGHT
         | WPAWN | BPAWN => button(
             pieces
@@ -221,19 +300,19 @@ fn get_button_from_square(
         )
         .width(Fill)
         .height(Fill)
-        .on_press(Message::ClickedSquare(get_corrected_index(
-            position,
-            perspective,
-        ))),
+        .on_press(Message::ClickedSquare(correct_index)),
 
         EMPTY => button(text(" "))
             .width(Fill)
             .height(Fill)
-            .on_press(Message::ClickedSquare(get_corrected_index(
-                position,
-                perspective,
-            ))),
+            .on_press(Message::ClickedSquare(correct_index)),
         _ => unreachable!("not allowed as square type/value"),
+    };
+
+    if should_be_light_square(correct_index) {
+        button.style(WhiteSquareStyle::style)
+    } else {
+        button.style(BlackSquareStyle::style)
     }
 }
 
