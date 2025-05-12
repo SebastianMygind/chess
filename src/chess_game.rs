@@ -19,6 +19,7 @@ pub enum Message {
     Reset,
     ClickedSquare(usize),
     Event(Event),
+    SwitchPerspective,
 }
 
 pub struct SvgPieces {
@@ -157,6 +158,15 @@ impl ChessGame {
                 },
                 _ => iced::Task::none(),
             },
+            Message::SwitchPerspective => {
+                let perspective = self.perspective;
+
+                match perspective {
+                    Players::White => self.perspective = Players::Black,
+                    Players::Black => self.perspective = Players::White,
+                }
+                iced::Task::none()
+            }
         }
     }
 
@@ -179,8 +189,10 @@ impl ChessGame {
                     let square_length = iced::Length::Fixed(board_size / 8.);
                     let board_length = iced::Length::Fixed(board_size);
 
-                    let top_bar: iced::widget::Container<Message> =
-                        container(row![button(text("reset board")).on_press(Message::Reset)]);
+                    let top_bar: iced::widget::Container<Message> = container(row![
+                        button(text("reset board")).on_press(Message::Reset),
+                        button(text("switch perspective")).on_press(Message::SwitchPerspective)
+                    ]);
 
                     let board = render_board(&self, square_length);
 
