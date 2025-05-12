@@ -1,6 +1,7 @@
 mod styling;
 
-use styling::LIGHT_SQUARE;
+use iced::theme::Palette;
+use styling::{DANGER_SQUARE, DARK_SQUARE, LIGHT_SQUARE};
 
 use crate::chessboard::{
     BBISHOP, BKING, BKNIGHT, BPAWN, BQUEEN, BROOK, ChessBoard, EMPTY, Players, WBISHOP, WKING,
@@ -287,16 +288,26 @@ fn get_button_from_square(
     };
 
     if should_be_light_square(correct_index) {
+        button.style(|theme: &iced::Theme, status| match status {
+            button::Status::Active => button::Style::default().with_background(LIGHT_SQUARE),
+            button::Status::Hovered => button::Style::default().with_background(LIGHT_SQUARE),
+            _ => button::primary(theme, status),
+        })
+    } else {
         button.style(|theme: &iced::Theme, status| {
-            let pallete = theme.extended_palette();
-
+            let palette = theme.extended_palette();
             match status {
-                button::Status::Active => button::Style::default().with_background(LIGHT_SQUARE),
+                button::Status::Active => {
+                    button::Style::default().with_background(palette.primary.strong.color)
+                }
+
+                button::Status::Hovered => {
+                    button::Style::default().with_background(palette.primary.weak.color)
+                }
+
                 _ => button::primary(theme, status),
             }
         })
-    } else {
-        button
     }
 }
 
