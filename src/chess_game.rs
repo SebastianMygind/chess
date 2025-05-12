@@ -1,3 +1,7 @@
+mod styling;
+
+use styling::LIGHT_SQUARE;
+
 use crate::chessboard::{
     BBISHOP, BKING, BKNIGHT, BPAWN, BQUEEN, BROOK, ChessBoard, EMPTY, Players, WBISHOP, WKING,
     WKNIGHT, WPAWN, WQUEEN, WROOK,
@@ -6,79 +10,6 @@ use iced::widget::{Row, button, column, container, row, svg, text};
 use iced::{self, Color, ContentFit, Event, Length, Pixels};
 use iced::{Background, Border, Shadow};
 use iced::{Element, Fill, Task};
-type BStyle = iced::widget::button::Style;
-
-struct WhiteSquareStyle;
-struct BlackSquareStyle;
-
-impl WhiteSquareStyle {
-    fn style(_theme: &iced::Theme, status: button::Status) -> button::Style {
-        let white_square: BStyle = BStyle {
-            background: Some(Background::Color(Color {
-                r: 240.,
-                g: 217.,
-                b: 181.,
-                a: 1.,
-            })),
-            text_color: Color::default(),
-            border: Border::default(),
-            shadow: Shadow::default(),
-        };
-        let white_square_active: BStyle = BStyle {
-            background: Some(Background::Color(Color {
-                r: 240.,
-                g: 217.,
-                b: 181.,
-                a: 0.4,
-            })),
-            text_color: Color::default(),
-            border: Border::default(),
-            shadow: Shadow::default(),
-        };
-
-        match status {
-            button::Status::Active | button::Status::Hovered | button::Status::Pressed => {
-                white_square_active
-            }
-            button::Status::Disabled => white_square,
-        }
-    }
-}
-
-impl BlackSquareStyle {
-    fn style(_theme: &iced::Theme, status: button::Status) -> button::Style {
-        let black_square: BStyle = BStyle {
-            background: Some(Background::Color(Color {
-                r: 181.,
-                g: 136.,
-                b: 99.,
-                a: 0.,
-            })),
-            text_color: Color::default(),
-            border: Border::default(),
-            shadow: Shadow::default(),
-        };
-
-        let black_square_active: BStyle = BStyle {
-            background: Some(Background::Color(Color {
-                r: 181.,
-                g: 136.,
-                b: 99.,
-                a: 0.4,
-            })),
-            text_color: Color::default(),
-            border: Border::default(),
-            shadow: Shadow::default(),
-        };
-
-        match status {
-            button::Status::Active | button::Status::Hovered | button::Status::Pressed => {
-                black_square_active
-            }
-            button::Status::Disabled => black_square,
-        }
-    }
-}
 
 #[derive(Debug, Clone)]
 pub enum Message {
@@ -356,9 +287,16 @@ fn get_button_from_square(
     };
 
     if should_be_light_square(correct_index) {
-        button.style(WhiteSquareStyle::style)
+        button.style(|theme: &iced::Theme, status| {
+            let pallete = theme.extended_palette();
+
+            match status {
+                button::Status::Active => button::Style::default().with_background(LIGHT_SQUARE),
+                _ => button::primary(theme, status),
+            }
+        })
     } else {
-        button.style(BlackSquareStyle::style)
+        button
     }
 }
 
