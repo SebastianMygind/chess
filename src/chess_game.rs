@@ -8,6 +8,8 @@ use iced::{Background, Border, Shadow};
 use iced::{Element, Fill, Task};
 type BStyle = iced::widget::button::Style;
 
+const SQUARE_SIZE: f32 = 100.;
+
 struct WhiteSquareStyle;
 struct BlackSquareStyle;
 
@@ -219,7 +221,11 @@ impl ChessGame {
             Some(_) => {
                 let board = render_board(&self);
 
-                container(board).height(Fill).padding([50., 50.]).into()
+                container(board)
+                    .height(iced::Length::Fixed(SQUARE_SIZE * 8.0))
+                    .width(iced::Length::Fixed(SQUARE_SIZE * 8.0))
+                    .padding([50., 50.])
+                    .into()
             }
             None => {
                 let starting_text = container(
@@ -294,8 +300,8 @@ fn get_button_from_square(
         | WPAWN | BPAWN => button(
             pieces
                 .to_iced_svg(square)
-                .width(Fill)
-                .height(Fill)
+                .width(iced::Length::Fixed(SQUARE_SIZE))
+                .height(iced::Length::Fixed(SQUARE_SIZE))
                 .content_fit(ContentFit::Cover),
         )
         .width(Fill)
