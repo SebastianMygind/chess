@@ -1,14 +1,21 @@
 use crate::chessboard::{MAIL_BOX_64, MAIL_BOX_120, Move};
 
-const WPAWN_START_MOVES: [Move; 2] = [Move { dx: 0, dy: 1 }, Move { dx: 0, dy: 2 }];
-const WPAWN_MOVE: Move = Move { dx: 0, dy: 1 };
-const WPAWN_ATTACK_MOVES: [Move; 2] = [Move { dx: 1, dy: 1 }, Move { dx: -1, dy: 1 }];
+pub enum MoveType {
+    Normal,
+    Enpassant(usize),
+    KingMove,
+    Rook,
+}
 
-const BPAWN_START_MOVES: [Move; 2] = [Move { dx: 0, dy: -1 }, Move { dx: 0, dy: -2 }];
-const BPAWN_MOVE: Move = Move { dx: 0, dy: -1 };
-const BPAWN_ATTACK_MOVES: [Move; 2] = [Move { dx: 1, dy: -1 }, Move { dx: -1, dy: -1 }];
+pub const WPAWN_START_MOVES: [Move; 2] = [Move { dx: 0, dy: 1 }, Move { dx: 0, dy: 2 }];
+pub const WPAWN_MOVE: Move = Move { dx: 0, dy: 1 };
+pub const WPAWN_ATTACK_MOVES: [Move; 2] = [Move { dx: 1, dy: 1 }, Move { dx: -1, dy: 1 }];
 
-const KNIGHT_MOVES: [Move; 8] = [
+pub const BPAWN_START_MOVES: [Move; 2] = [Move { dx: 0, dy: -1 }, Move { dx: 0, dy: -2 }];
+pub const BPAWN_MOVE: Move = Move { dx: 0, dy: -1 };
+pub const BPAWN_ATTACK_MOVES: [Move; 2] = [Move { dx: 1, dy: -1 }, Move { dx: -1, dy: -1 }];
+
+pub const KNIGHT_MOVES: [Move; 8] = [
     Move { dx: 1, dy: 2 },
     Move { dx: 1, dy: -2 },
     Move { dx: 2, dy: 1 },
@@ -19,21 +26,21 @@ const KNIGHT_MOVES: [Move; 8] = [
     Move { dx: -2, dy: -1 },
 ];
 
-const DIAGONAL_MOVES: [Move; 4] = [
+pub const DIAGONAL_MOVES: [Move; 4] = [
     Move { dx: 1, dy: 1 },
     Move { dx: -1, dy: 1 },
     Move { dx: 1, dy: -1 },
     Move { dx: -1, dy: -1 },
 ];
 
-const ANTI_DIAGONAL_MOVES: [Move; 4] = [
+pub const ANTI_DIAGONAL_MOVES: [Move; 4] = [
     Move { dx: 1, dy: 0 },
     Move { dx: -1, dy: 0 },
     Move { dx: 0, dy: 1 },
     Move { dx: 0, dy: -1 },
 ];
 
-const ALL_DIRECTION_MOVES: [Move; 8] = concat_const_arrays(DIAGONAL_MOVES, ANTI_DIAGONAL_MOVES);
+pub const ALL_DIRECTION_MOVES: [Move; 8] = concat_const_arrays(DIAGONAL_MOVES, ANTI_DIAGONAL_MOVES);
 
 pub fn get_new_position(current_board_position: usize, chess_move: Move) -> Option<i8> {
     debug_assert!(current_board_position < 64);

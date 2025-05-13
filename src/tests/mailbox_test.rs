@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
     use crate::chessboard::Move;
-    use crate::legal_moves::get_new_position;
+    use crate::moves::get_new_position;
 
     #[test]
     fn test_legal_move_1() {

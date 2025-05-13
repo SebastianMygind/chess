@@ -1,7 +1,7 @@
 mod chess_game;
 mod chessboard;
 mod fen;
-mod legal_moves;
+mod moves;
 mod tests;
 use chess_game::ChessGame;
 

@@ -139,7 +139,7 @@ pub fn parse_castling_ability(str_part: &str) -> Option<[bool; 4]> {
     Some(castling_ability)
 }
 
-pub fn parse_epawn(str_part: &str) -> Option<Option<i8>> {
+pub fn parse_epawn(str_part: &str) -> Option<Option<usize>> {
     let mut epawn = None;
     let mut chars = str_part.chars();
 
@@ -149,7 +149,7 @@ pub fn parse_epawn(str_part: &str) -> Option<Option<i8>> {
         let rank = parse_rank(char)?;
         let file = parse_file(chars.next()?)?;
 
-        epawn = Some(((rank * 8) + file) as i8);
+        epawn = Some(((rank * 8) + file));
     }
 
     Some(epawn)

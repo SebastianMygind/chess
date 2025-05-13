@@ -65,7 +65,7 @@ pub struct ChessBoard {
     pub board: [i8; BOARD_WIDTH * BOARD_HEIGHT],
     side_to_move: Players,
     castling_ability: [bool; 4], /* WKing, WQueen, BKing, BQueen */
-    en_passant_target_square: Option<i8>,
+    en_passant_target_square: Option<usize>,
     half_move_clock: u32,
     full_move_counter: u32,
 }
