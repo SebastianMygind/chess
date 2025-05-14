@@ -54,20 +54,20 @@ pub const MAIL_BOX_64: [i8; 64] = [
     81, 82, 83, 84, 85, 86, 87, 88, 91, 92, 93, 94, 95, 96, 97, 98,
 ];
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Players {
     White,
     Black,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ChessBoard {
     pub board: [i8; BOARD_WIDTH * BOARD_HEIGHT],
-    side_to_move: Players,
-    castling_ability: [bool; 4], /* WKing, WQueen, BKing, BQueen */
-    en_passant_target_square: Option<usize>,
-    half_move_clock: u32,
-    full_move_counter: u32,
+    pub side_to_move: Players,
+    pub castling_ability: [bool; 4], /* WKing, WQueen, BKing, BQueen */
+    pub en_passant_target_square: Option<usize>,
+    pub half_move_clock: u32,
+    pub full_move_counter: u32,
 }
 
 impl ChessBoard {
@@ -76,11 +76,7 @@ impl ChessBoard {
             MoveType::Normal => {
                 self.board[move_to_make.to] = self.board[move_to_make.from];
                 self.board[move_to_make.from] = EMPTY;
-
-                if !move_to_make.is_capture {
-                    self.update_half_moves();
-                }
-
+                self.update_half_moves();
                 self.reset_enpassant();
             }
 
@@ -118,22 +114,15 @@ impl ChessBoard {
                 self.board[move_to_make.to] = self.board[move_to_make.from];
                 self.board[move_to_make.from] = EMPTY;
 
-                if !move_to_make.is_capture {
-                    self.update_half_moves();
-                }
-
+                self.update_half_moves();
                 self.check_and_update_rook(move_to_make.from);
                 self.reset_enpassant();
             }
 
             MoveType::KingMove => {
-                if !move_to_make.is_capture {
-                    self.update_half_moves();
-                }
-
                 self.board[move_to_make.to] = self.board[move_to_make.from];
                 self.board[move_to_make.from] = EMPTY;
-
+                self.update_half_moves();
                 self.reset_enpassant();
                 self.disable_castle();
             }

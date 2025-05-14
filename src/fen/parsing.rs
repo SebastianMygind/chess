@@ -132,6 +132,7 @@ pub fn parse_castling_ability(str_part: &str) -> Option<[bool; 4]> {
             'k' => castling_ability[2] = true,
             'q' => castling_ability[3] = true,
 
+            '-' => return Some([false; 4]),
             _ => return None,
         }
     }
