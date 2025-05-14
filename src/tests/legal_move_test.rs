@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use crate::chessboard::{self, ChessBoard, EMPTY, Players, WPAWN};
+    use crate::chessboard::{ChessBoard, EMPTY, Players, WPAWN};
     use crate::fen::Fen;
     use crate::moves::{LegalMove, MoveType};
 
