@@ -6,6 +6,7 @@ use crate::chessboard::{
     BBISHOP, BKING, BKNIGHT, BPAWN, BQUEEN, BROOK, ChessBoard, EMPTY, Players, WBISHOP, WKING,
     WKNIGHT, WPAWN, WQUEEN, WROOK,
 };
+use crate::fen::parsing::parse_file;
 use iced::widget::{Row, button, column, container, row, svg, text};
 use iced::{self, ContentFit, Event, Length, Pixels};
 use iced::{Element, Fill, Task};
@@ -298,10 +299,16 @@ fn get_button_from_square(
     };
 
     if should_be_light_square(correct_index) {
-        button.style(|theme: &iced::Theme, status| match status {
-            button::Status::Active => button::Style::default().with_background(LIGHT_SQUARE),
-            button::Status::Hovered => button::Style::default().with_background(LIGHT_SQUARE),
-            _ => button::primary(theme, status),
+        button.style(|theme: &iced::Theme, status| {
+            let palette = theme.palette();
+
+            match status {
+                button::Status::Active => button::Style::default().with_background(palette.text),
+                button::Status::Hovered => {
+                    button::Style::default().with_background(palette.text.scale_alpha(0.7))
+                }
+                _ => button::primary(theme, status),
+            }
         })
     } else {
         button.style(|theme: &iced::Theme, status| {
