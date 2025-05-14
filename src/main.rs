@@ -1,5 +1,6 @@
 mod chess_game;
 mod chessboard;
+mod engine;
 mod fen;
 mod moves;
 mod tests;

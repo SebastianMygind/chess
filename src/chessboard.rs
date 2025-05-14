@@ -3,7 +3,7 @@ use crate::fen::parsing::{
     parse_string_to_num,
 };
 use crate::fen::{FEN_STARTING_POSITION, Fen, FenArguments, FenError, FenType};
-
+use crate::moves::{LegalMove, MoveType};
 use std::fmt;
 
 pub const BOARD_HEIGHT: usize = 8;
@@ -68,6 +68,181 @@ pub struct ChessBoard {
     en_passant_target_square: Option<usize>,
     half_move_clock: u32,
     full_move_counter: u32,
+}
+
+impl ChessBoard {
+    fn update(&mut self, move_to_make: LegalMove) {
+        match move_to_make.move_type {
+            MoveType::Normal => {
+                self.board[move_to_make.to] = self.board[move_to_make.from];
+                self.board[move_to_make.from] = EMPTY;
+
+                if !move_to_make.is_capture {
+                    self.update_half_moves();
+                }
+
+                self.reset_enpassant();
+            }
+
+            MoveType::PawnMove { promotion_move } => {
+                let piece_to_set = match promotion_move {
+                    None => self.board[move_to_make.from],
+                    Some(piece) => piece,
+                };
+
+                self.board[move_to_make.to] = piece_to_set;
+                self.board[move_to_make.from] = EMPTY;
+
+                self.reset_enpassant();
+                self.reset_half_moves();
+            }
+
+            MoveType::PawnDoubleMove => {
+                self.board[move_to_make.to] = self.board[move_to_make.from];
+                self.board[move_to_make.from] = EMPTY;
+
+                self.set_enpassant(move_to_make.to);
+                self.reset_half_moves();
+            }
+
+            MoveType::Enpassant { target_square } => {
+                self.board[move_to_make.to] = self.board[move_to_make.from];
+                self.board[move_to_make.from] = EMPTY;
+                self.board[target_square] = EMPTY;
+
+                self.reset_enpassant();
+                self.reset_half_moves();
+            }
+
+            MoveType::RookMove => {
+                self.board[move_to_make.to] = self.board[move_to_make.from];
+                self.board[move_to_make.from] = EMPTY;
+
+                if !move_to_make.is_capture {
+                    self.update_half_moves();
+                }
+
+                self.check_and_update_rook(move_to_make.from);
+                self.reset_enpassant();
+            }
+
+            MoveType::KingMove => {
+                if !move_to_make.is_capture {
+                    self.update_half_moves();
+                }
+
+                self.board[move_to_make.to] = self.board[move_to_make.from];
+                self.board[move_to_make.from] = EMPTY;
+
+                self.reset_enpassant();
+                self.disable_castle();
+            }
+
+            MoveType::CastleKingSide => {
+                let rook_pos_before = move_to_make.from + 3;
+
+                self.board[move_to_make.from + 1] = self.board[rook_pos_before];
+                self.board[rook_pos_before] = EMPTY;
+
+                self.board[move_to_make.to] = self.board[move_to_make.from];
+                self.board[move_to_make.from] = EMPTY;
+
+                self.disable_castle();
+                self.update_half_moves();
+                self.reset_enpassant();
+            }
+
+            MoveType::CastleQueenSide => {
+                let rook_pos_before = move_to_make.from - 4;
+
+                self.board[move_to_make.from - 1] = self.board[rook_pos_before];
+                self.board[rook_pos_before] = EMPTY;
+
+                self.board[move_to_make.to] = self.board[move_to_make.from];
+                self.board[move_to_make.from] = EMPTY;
+
+                self.disable_castle();
+                self.update_half_moves();
+                self.reset_enpassant();
+            }
+        }
+
+        if move_to_make.is_capture {
+            self.reset_half_moves();
+            self.check_and_update_rook(move_to_make.to);
+        }
+
+        self.update_full_move();
+        self.update_side_to_move();
+    }
+
+    fn set_enpassant(&mut self, location: usize) {
+        self.en_passant_target_square = Some(location);
+    }
+
+    fn reset_enpassant(&mut self) {
+        self.en_passant_target_square = None;
+    }
+
+    fn reset_half_moves(&mut self) {
+        self.half_move_clock = 0;
+    }
+
+    fn update_half_moves(&mut self) {
+        self.half_move_clock += 1;
+    }
+
+    fn update_full_move(&mut self) {
+        match self.side_to_move {
+            Players::White => {}
+
+            Players::Black => {
+                self.full_move_counter += 1;
+            }
+        }
+    }
+
+    fn disable_castle(&mut self) {
+        match self.side_to_move {
+            Players::White => {
+                self.castling_ability[0] = false;
+                self.castling_ability[1] = false;
+            }
+            Players::Black => {
+                self.castling_ability[2] = false;
+                self.castling_ability[3] = false;
+            }
+        }
+    }
+
+    fn check_and_update_rook(&mut self, captured_square: usize) {
+        match captured_square {
+            0 => {
+                self.castling_ability[1] = false;
+            }
+
+            7 => {
+                self.castling_ability[0] = false;
+            }
+
+            56 => {
+                self.castling_ability[3] = false;
+            }
+
+            63 => {
+                self.castling_ability[2] = false;
+            }
+
+            _ => {}
+        }
+    }
+
+    fn update_side_to_move(&mut self) {
+        match self.side_to_move {
+            Players::White => self.side_to_move = Players::Black,
+            Players::Black => self.side_to_move = Players::White,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy)]

@@ -7,7 +7,7 @@ use crate::chessboard::{
     WKNIGHT, WPAWN, WQUEEN, WROOK,
 };
 use iced::widget::{Row, button, column, container, row, svg, text};
-use iced::{self, Color, ContentFit, Event, Length, Pixels};
+use iced::{self, ContentFit, Event, Length, Pixels};
 use iced::{Element, Fill, Task};
 
 #[derive(Debug, Clone)]
@@ -249,7 +249,7 @@ fn render_board(state: &ChessGame, square_size: Length) -> iced::widget::Column<
 
     let board_state = state
         .game
-        .clone()
+        .to_owned()
         .expect("Expect the board here from callin function!");
 
     for i in 0..64 {

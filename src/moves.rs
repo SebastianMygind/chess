@@ -1,10 +1,29 @@
 use crate::chessboard::{MAIL_BOX_64, MAIL_BOX_120, Move};
 
+#[derive(Debug, Clone, Copy)]
 pub enum MoveType {
     Normal,
-    Enpassant(usize),
+    PawnMove { promotion_move: Option<i8> },
+    PawnDoubleMove,
+    Enpassant { target_square: usize }, /* The square at which the pawn to take exists at */
     KingMove,
-    Rook,
+    RookMove,
+    CastleKingSide,
+    CastleQueenSide,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct LegalMove {
+    pub from: usize,
+    pub to: usize,
+    pub move_type: MoveType,
+    pub is_capture: bool,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct RatedMove {
+    chess_move: LegalMove,
+    rating: i32,
 }
 
 pub const WPAWN_START_MOVES: [Move; 2] = [Move { dx: 0, dy: 1 }, Move { dx: 0, dy: 2 }];
