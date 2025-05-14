@@ -1,6 +1,5 @@
 mod styling;
 
-use iced::theme::Palette;
 use styling::{DANGER_SQUARE, DARK_SQUARE, LIGHT_SQUARE};
 
 use crate::chessboard::{
@@ -9,7 +8,6 @@ use crate::chessboard::{
 };
 use iced::widget::{Row, button, column, container, row, svg, text};
 use iced::{self, Color, ContentFit, Event, Length, Pixels};
-use iced::{Background, Border, Shadow};
 use iced::{Element, Fill, Task};
 
 #[derive(Debug, Clone)]
