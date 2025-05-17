@@ -63,6 +63,8 @@ pub enum Players {
 #[derive(Debug, Clone, PartialEq)]
 pub struct ChessBoard {
     pub board: [i8; BOARD_WIDTH * BOARD_HEIGHT],
+    pub white_king_position: usize,
+    pub black_king_position: usize,
     pub side_to_move: Players,
     pub castling_ability: [bool; 4], /* WKing, WQueen, BKing, BQueen */
     pub en_passant_target_square: Option<usize>,
@@ -120,6 +122,12 @@ impl ChessBoard {
             }
 
             MoveType::KingMove => {
+                if self.board[move_to_make.from].is_positive() {
+                    self.white_king_position = move_to_make.to;
+                } else {
+                    self.black_king_position = move_to_make.to;
+                }
+
                 self.board[move_to_make.to] = self.board[move_to_make.from];
                 self.board[move_to_make.from] = EMPTY;
                 self.update_half_moves();
@@ -129,6 +137,12 @@ impl ChessBoard {
 
             MoveType::CastleKingSide => {
                 let rook_pos_before = move_to_make.from + 3;
+
+                if self.board[move_to_make.from].is_positive() {
+                    self.white_king_position = move_to_make.to;
+                } else {
+                    self.black_king_position = move_to_make.to;
+                }
 
                 self.board[move_to_make.from + 1] = self.board[rook_pos_before];
                 self.board[rook_pos_before] = EMPTY;
@@ -240,6 +254,23 @@ pub struct Move {
     pub dy: i8,
 }
 
+impl Move {
+    pub fn get_new_position(&self, current_board_position: usize) -> Option<usize> {
+        debug_assert!(current_board_position < 64);
+
+        let current_mailbox_pos: i8 = MAIL_BOX_64[current_board_position];
+
+        let new_position: i8 = current_mailbox_pos + self.dx + (self.dy * 10);
+
+        let new_mail_box_pos: i8 = MAIL_BOX_120[new_position as usize];
+
+        if new_mail_box_pos != -1 {
+            return Some(new_mail_box_pos as usize);
+        }
+        None
+    }
+}
+
 impl Fen for ChessBoard {
     fn set_fen_position(fen: &str) -> Result<ChessBoard, FenError> {
         let fen_type = Self::validate_fen(fen)?;
@@ -266,6 +297,10 @@ impl Fen for ChessBoard {
         if fen_type == FenType::NoCounter {
             return Ok(Self {
                 board,
+                white_king_position: find_first_matching_piece(&board, WKING)
+                    .expect("A king should exist on validated FEN"),
+                black_king_position: find_first_matching_piece(&board, BKING)
+                    .expect("A king should exist on validated FEN"),
                 side_to_move,
                 castling_ability,
                 en_passant_target_square,
@@ -288,6 +323,10 @@ impl Fen for ChessBoard {
 
         Ok(Self {
             board,
+            white_king_position: find_first_matching_piece(&board, WKING)
+                .expect("A king should exist on validated FEN"),
+            black_king_position: find_first_matching_piece(&board, BKING)
+                .expect("A king should exist on validated FEN"),
             side_to_move,
             castling_ability,
             en_passant_target_square,
@@ -381,5 +420,18 @@ fn piece_to_char(piece: i8) -> char {
         EMPTY => ' ',
 
         _ => unreachable!("Illegal character in board!"),
+    }
+}
+
+pub fn find_first_matching_piece(board: &[i8; 64], piece_to_find: i8) -> Option<usize> {
+    let matching = board
+        .iter()
+        .enumerate()
+        .find(|(_, piece)| **piece == piece_to_find);
+
+    if let Some((pos, _)) = matching {
+        Some(pos)
+    } else {
+        None
     }
 }
