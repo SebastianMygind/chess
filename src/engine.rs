@@ -24,7 +24,7 @@ impl ChessEngine for ChessBoard {
                 continue;
             }
 
-            if !(is_owned_piece(square, self.side_to_move)) {
+            if !is_owned_piece(square, self.side_to_move) {
                 continue;
             }
 
