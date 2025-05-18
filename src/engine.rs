@@ -20,6 +20,10 @@ impl ChessEngine for ChessBoard {
         let legal_moves: Vec<LegalMove> = Vec::with_capacity(20);
 
         for square in self.board {
+            if square == EMPTY {
+                continue;
+            }
+
             if !(is_owned_piece(square, self.side_to_move)) {
                 continue;
             }
