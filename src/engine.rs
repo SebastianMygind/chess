@@ -1,4 +1,8 @@
+mod king;
 mod pawn;
+mod queen;
+use king::get_king_moves;
+use queen::get_queen_moves;
 
 use crate::chessboard::{
     BBISHOP, BKING, BKNIGHT, BPAWN, BQUEEN, BROOK, ChessBoard, EMPTY, Move, Players, WBISHOP,
@@ -44,22 +48,25 @@ impl ChessEngine for ChessBoard {
     }
 }
 
-fn get_pseudo_legal_moves(chess_board: &ChessBoard) -> Vec<LegalMove> {
-    let legal_moves: Vec<LegalMove> = Vec::with_capacity(20);
+fn get_pseudo_legal_moves(chessboard: &ChessBoard) -> Vec<LegalMove> {
+    let mut legal_moves: Vec<LegalMove> = Vec::with_capacity(30);
 
-    for square in chess_board.board {
-        if square == EMPTY {
+    for (index, square) in chessboard.board.iter().enumerate() {
+        if *square == EMPTY {
             continue;
         }
 
-        if !is_owned_piece(square, chess_board.side_to_move) {
+        if !is_owned_piece(*square, chessboard.side_to_move) {
             continue;
         }
 
-        match square {
-            WKING | BKING => {}
-
-            WQUEEN | BQUEEN => {}
+        match *square {
+            WKING | BKING => {
+                legal_moves.append(&mut get_king_moves(index, chessboard));
+            }
+            WQUEEN | BQUEEN => {
+                legal_moves.append(&mut get_queen_moves(index, chessboard));
+            }
 
             WROOK | BROOK => {}
 
@@ -90,20 +97,75 @@ fn is_owned_piece(piece: i8, current_side: Players) -> bool {
     }
 }
 
-fn get_multi_step_pseudo_legal_moves(
+pub fn get_multi_step_pseudo_legal_moves(
     chessboard: &ChessBoard,
     move_data: &[Move],
+    position: usize,
+    meta_data: MoveType,
 ) -> Vec<LegalMove> {
-    let legal_moves: Vec<LegalMove> = Vec::with_capacity(10);
+    let mut legal_moves: Vec<LegalMove> = Vec::with_capacity(10);
+
+    for move_direction in move_data {
+        let mut position_opt = move_direction.get_new_position(position);
+
+        while position_opt.is_some() {
+            let new_position = position_opt.expect("checked");
+            position_opt = move_direction.get_new_position(new_position);
+
+            let target_square = chessboard.board[new_position];
+
+            if target_square.is_positive() == (chessboard.side_to_move == Players::White) {
+                break;
+            }
+
+            let is_capture = !(target_square == EMPTY);
+
+            legal_moves.push(LegalMove {
+                from: position,
+                to: new_position,
+                move_type: meta_data,
+                is_capture,
+            });
+
+            if is_capture {
+                break;
+            }
+        }
+    }
 
     legal_moves
 }
 
-fn single_step_get_pseudo_legal_moves(
+pub fn single_step_get_pseudo_legal_moves(
     chessboard: &ChessBoard,
     move_data: &[Move],
+    position: usize,
+    meta_data: MoveType,
 ) -> Vec<LegalMove> {
-    let legal_moves: Vec<LegalMove> = Vec::with_capacity(4);
+    let mut legal_moves: Vec<LegalMove> = Vec::with_capacity(4);
+
+    for move_direction in move_data {
+        let new_position = if let Some(pos) = move_direction.get_new_position(position) {
+            pos
+        } else {
+            continue;
+        };
+
+        let target_square = chessboard.board[new_position];
+
+        if target_square.is_positive() == (chessboard.side_to_move == Players::White) {
+            continue;
+        }
+
+        let is_capture = !(target_square == EMPTY);
+
+        legal_moves.push(LegalMove {
+            from: position,
+            to: new_position,
+            move_type: meta_data,
+            is_capture,
+        });
+    }
 
     legal_moves
 }

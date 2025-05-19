@@ -265,9 +265,10 @@ impl Move {
         let new_mail_box_pos: i8 = MAIL_BOX_120[new_position as usize];
 
         if new_mail_box_pos != -1 {
-            return Some(new_mail_box_pos as usize);
+            Some(new_mail_box_pos as usize)
+        } else {
+            None
         }
-        None
     }
 }
 
