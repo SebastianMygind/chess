@@ -5,8 +5,8 @@ use crate::chessboard::{
     WKING, WKNIGHT, WPAWN, WQUEEN, WROOK,
 };
 use crate::moves::{
-    ALL_DIRECTION_MOVES, ANTI_DIAGONAL_MOVES, BPAWN_ATTACK_MOVES, DIAGONAL_MOVES, LegalMove,
-    MoveType, RatedMove, WPAWN_ATTACK_MOVES,
+    ALL_DIRECTION_MOVES, ANTI_DIAGONAL_MOVES, BPAWN_ATTACK_MOVES, DIAGONAL_MOVES, KNIGHT_MOVES,
+    LegalMove, MoveType, RatedMove, WPAWN_ATTACK_MOVES,
 };
 
 pub trait ChessEngine {
@@ -85,6 +85,7 @@ fn king_is_checked(board: &[i8; 64], king_position: usize) -> bool {
     king_is_attacked_by_pawns(board, king_position)
         || king_is_attacked_on_diagonals(board, king_position)
         || king_is_attacked_on_anti_diagonals(board, king_position)
+        || king_is_attacked_by_knights(board, king_position)
 }
 
 pub fn king_is_attacked_by_pawns(board: &[i8; 64], king_position: usize) -> bool {
@@ -166,6 +167,24 @@ pub fn king_is_attacked_on_anti_diagonals(board: &[i8; 64], king_position: usize
                 return true;
             } else {
                 break;
+            }
+        }
+    }
+
+    false
+}
+
+pub fn king_is_attacked_by_knights(board: &[i8; 64], king_position: usize) -> bool {
+    let knight = if board[king_position].is_positive() {
+        BKNIGHT
+    } else {
+        WKNIGHT
+    };
+
+    for attack_move in KNIGHT_MOVES {
+        if let Some(pos) = attack_move.get_new_position(king_position) {
+            if knight == board[pos] {
+                return true;
             }
         }
     }
