@@ -17,37 +17,22 @@ pub trait ChessEngine {
 
 impl ChessEngine for ChessBoard {
     fn legal_moves(&self) -> Vec<LegalMove> {
-        let legal_moves: Vec<LegalMove> = Vec::with_capacity(20);
+        let mut legal_moves: Vec<LegalMove> = Vec::with_capacity(20);
 
-        for square in self.board {
-            if square == EMPTY {
-                continue;
-            }
+        let pseudo_legal_moves = get_pseudo_legal_moves(self);
 
-            if !is_owned_piece(square, self.side_to_move) {
-                continue;
-            }
+        for pseudo_legal_move in pseudo_legal_moves {
+            let mut new_board = self.clone();
+            new_board.make_move(pseudo_legal_move);
 
-            match square {
-                WKING | BKING => {}
+            let king_pos = if new_board.side_to_move == Players::White {
+                new_board.black_king_position
+            } else {
+                new_board.white_king_position
+            };
 
-                WQUEEN | BQUEEN => {}
-
-                WROOK | BROOK => {}
-
-                WBISHOP | BBISHOP => {}
-
-                WKNIGHT | BKNIGHT => {}
-
-                WPAWN => {}
-
-                BPAWN => {}
-
-                EMPTY => {
-                    continue;
-                }
-
-                _ => unreachable!("All cases have been covered!"),
+            if !king_is_checked(&new_board.board, king_pos) {
+                legal_moves.push(pseudo_legal_move);
             }
         }
 
@@ -59,6 +44,44 @@ impl ChessEngine for ChessBoard {
     }
 }
 
+fn get_pseudo_legal_moves(chess_board: &ChessBoard) -> Vec<LegalMove> {
+    let legal_moves: Vec<LegalMove> = Vec::with_capacity(20);
+
+    for square in chess_board.board {
+        if square == EMPTY {
+            continue;
+        }
+
+        if !is_owned_piece(square, chess_board.side_to_move) {
+            continue;
+        }
+
+        match square {
+            WKING | BKING => {}
+
+            WQUEEN | BQUEEN => {}
+
+            WROOK | BROOK => {}
+
+            WBISHOP | BBISHOP => {}
+
+            WKNIGHT | BKNIGHT => {}
+
+            WPAWN => {}
+
+            BPAWN => {}
+
+            EMPTY => {
+                continue;
+            }
+
+            _ => unreachable!("All cases have been covered!"),
+        }
+    }
+
+    legal_moves
+}
+
 fn is_owned_piece(piece: i8, current_side: Players) -> bool {
     if current_side == Players::White {
         piece.is_positive()
@@ -67,13 +90,19 @@ fn is_owned_piece(piece: i8, current_side: Players) -> bool {
     }
 }
 
-fn get_multi_step_legal_moves(chessboard: &ChessBoard, move_data: &[Move]) -> Vec<LegalMove> {
+fn get_multi_step_pseudo_legal_moves(
+    chessboard: &ChessBoard,
+    move_data: &[Move],
+) -> Vec<LegalMove> {
     let legal_moves: Vec<LegalMove> = Vec::with_capacity(10);
 
     legal_moves
 }
 
-fn single_step_get_legal_moves(chessboard: &ChessBoard, move_data: &[Move]) -> Vec<LegalMove> {
+fn single_step_get_pseudo_legal_moves(
+    chessboard: &ChessBoard,
+    move_data: &[Move],
+) -> Vec<LegalMove> {
     let legal_moves: Vec<LegalMove> = Vec::with_capacity(4);
 
     legal_moves

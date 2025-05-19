@@ -15,7 +15,7 @@ mod tests {
 
         let mut chessboard = ChessBoard::set_fen_position("4k3/3p4/8/8/8/8/5P2/B3K3 w - - 0 1")
             .expect("normal_move_test");
-        chessboard.update(legal_move);
+        chessboard.make_move(legal_move);
 
         let mut expected_board = ChessBoard::set_fen_position("4k3/3p4/8/8/8/8/5P2/B3K3 w - - 0 1")
             .expect("normal_move_test");
@@ -44,7 +44,7 @@ mod tests {
 
         let mut chessboard = ChessBoard::set_fen_position("4k3/3p4/8/8/8/8/5P2/4K3 w - - 0 1")
             .expect("test should be valid!");
-        chessboard.update(legal_move);
+        chessboard.make_move(legal_move);
 
         let mut expected_board = ChessBoard::set_fen_position("4k3/3p4/8/8/8/8/5P2/4K3 w - - 0 1")
             .expect("test should be valid!");
@@ -77,7 +77,7 @@ mod tests {
         expected_board.side_to_move = Players::Black;
         expected_board.en_passant_target_square = Some(24);
 
-        chessboard.update(legal_move);
+        chessboard.make_move(legal_move);
 
         assert_eq!(chessboard, expected_board);
     }

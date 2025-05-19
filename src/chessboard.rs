@@ -73,7 +73,7 @@ pub struct ChessBoard {
 }
 
 impl ChessBoard {
-    pub fn update(&mut self, move_to_make: LegalMove) {
+    pub fn make_move(&mut self, move_to_make: LegalMove) {
         match move_to_make.move_type {
             MoveType::Normal => {
                 self.board[move_to_make.to] = self.board[move_to_make.from];
