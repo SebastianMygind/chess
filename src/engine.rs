@@ -114,12 +114,32 @@ pub fn get_multi_step_pseudo_legal_moves(
 
             let target_square = chessboard.board[new_position];
 
-            if target_square.is_positive() == (chessboard.side_to_move == Players::White) {
+            let white_is_side_to_move = chessboard.side_to_move == Players::White;
+
+            if target_square.is_positive() == white_is_side_to_move {
                 break;
             }
 
             let is_capture = !(target_square == EMPTY);
 
+            if let Some(enpassant) = chessboard.en_passant_target_square {
+                let capturable_position = if white_is_side_to_move {
+                    enpassant + 8
+                } else {
+                    enpassant - 8
+                };
+                if capturable_position == new_position {
+                    legal_moves.push(LegalMove {
+                        from: position,
+                        to: new_position,
+                        move_type: MoveType::Enpassant {
+                            target_square: enpassant,
+                        },
+                        is_capture: true,
+                    });
+                    continue;
+                }
+            }
             legal_moves.push(LegalMove {
                 from: position,
                 to: new_position,
@@ -153,12 +173,32 @@ pub fn single_step_get_pseudo_legal_moves(
 
         let target_square = chessboard.board[new_position];
 
-        if target_square.is_positive() == (chessboard.side_to_move == Players::White) {
+        let white_is_side_to_move = chessboard.side_to_move == Players::White;
+
+        if target_square.is_positive() == white_is_side_to_move {
             continue;
         }
 
         let is_capture = !(target_square == EMPTY);
 
+        if let Some(enpassant) = chessboard.en_passant_target_square {
+            let capturable_position = if white_is_side_to_move {
+                enpassant + 8
+            } else {
+                enpassant - 8
+            };
+            if capturable_position == new_position {
+                legal_moves.push(LegalMove {
+                    from: position,
+                    to: new_position,
+                    move_type: MoveType::Enpassant {
+                        target_square: enpassant,
+                    },
+                    is_capture: true,
+                });
+                continue;
+            }
+        }
         legal_moves.push(LegalMove {
             from: position,
             to: new_position,
