@@ -322,3 +322,29 @@ pub fn king_is_attacked_by_knights(board: &[i8; 64], king_position: usize) -> bo
 
     false
 }
+
+pub enum MoveStatus {
+    NoMove,
+    Move,
+    CaptureMove,
+}
+
+pub fn can_move_to_position(side_to_move: Players, square: i8) -> MoveStatus {
+    if side_to_move == Players::White {
+        if square == EMPTY {
+            MoveStatus::Move
+        } else if square.is_positive() {
+            MoveStatus::NoMove
+        } else {
+            MoveStatus::CaptureMove
+        }
+    } else {
+        if square == EMPTY {
+            MoveStatus::Move
+        } else if square.is_negative() {
+            MoveStatus::NoMove
+        } else {
+            MoveStatus::CaptureMove
+        }
+    }
+}

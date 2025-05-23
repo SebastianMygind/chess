@@ -1,5 +1,5 @@
 use crate::{
-    chessboard::{ChessBoard, EMPTY, Players},
+    chessboard::ChessBoard,
     moves::{ALL_DIRECTION_MOVES, LegalMove, MoveType},
 };
 
