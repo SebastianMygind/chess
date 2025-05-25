@@ -1,8 +1,15 @@
+mod bishop;
 mod king;
+mod knight;
 mod pawn;
 mod queen;
+mod rook;
+use bishop::get_bishop_moves;
 use king::get_king_moves;
+use knight::get_knight_moves;
+use pawn::get_pawn_moves;
 use queen::get_queen_moves;
+use rook::get_rook_moves;
 
 use crate::chessboard::{
     BBISHOP, BKING, BKNIGHT, BPAWN, BQUEEN, BROOK, ChessBoard, EMPTY, Move, Players, WBISHOP,
@@ -16,7 +23,7 @@ use crate::moves::{
 pub trait ChessEngine {
     fn legal_moves(&self) -> Vec<LegalMove>;
 
-    fn perft(&self) -> Vec<(String, u32)>;
+    fn perft(&self, depth: u32) -> (Vec<(String, u32)>, u32);
 }
 
 impl ChessEngine for ChessBoard {
@@ -43,8 +50,45 @@ impl ChessEngine for ChessBoard {
         legal_moves
     }
 
-    fn perft(&self) -> Vec<(String, u32)> {
-        todo!()
+    fn perft(&self, depth: u32) -> (Vec<(String, u32)>, u32) {
+        if depth == 0 {
+            return (vec![(String::from("Depth = 0"), 0)], 0);
+        } else if depth == 1 {
+            let moves = self.legal_moves();
+            let mut result: Vec<(String, u32)> = Vec::new();
+
+            for legal in moves.iter() {
+                let from = legal.from;
+                let to = legal.to;
+
+                result.push((format!("{from}, {to}"), 1));
+            }
+
+            let move_count = if moves.len() == 0 {
+                1
+            } else {
+                moves.len() as u32
+            };
+
+            return (result, move_count);
+        } else {
+            let moves = self.legal_moves();
+            let mut result: Vec<(String, u32)> = Vec::new();
+            let mut move_count: u32 = 0;
+
+            for legal in moves {
+                let from = legal.from;
+                let to = legal.to;
+
+                let mut new_board = self.clone();
+
+                new_board.make_move(legal);
+                let (_, leaf_count) = new_board.perft(depth - 1);
+                move_count += leaf_count;
+                result.push((format!("{from}, {to}"), leaf_count));
+            }
+            return (result, move_count);
+        }
     }
 }
 
@@ -68,15 +112,21 @@ fn get_pseudo_legal_moves(chessboard: &ChessBoard) -> Vec<LegalMove> {
                 legal_moves.append(&mut get_queen_moves(index, chessboard));
             }
 
-            WROOK | BROOK => {}
+            WROOK | BROOK => {
+                legal_moves.append(&mut get_rook_moves(index, chessboard));
+            }
 
-            WBISHOP | BBISHOP => {}
+            WBISHOP | BBISHOP => {
+                legal_moves.append(&mut get_bishop_moves(index, chessboard));
+            }
 
-            WKNIGHT | BKNIGHT => {}
+            WKNIGHT | BKNIGHT => {
+                legal_moves.append(&mut get_knight_moves(index, chessboard));
+            }
 
-            WPAWN => {}
-
-            BPAWN => {}
+            WPAWN | BPAWN => {
+                legal_moves.append(&mut get_pawn_moves(index, chessboard));
+            }
 
             EMPTY => {
                 continue;
@@ -122,24 +172,6 @@ pub fn get_multi_step_pseudo_legal_moves(
 
             let is_capture = !(target_square == EMPTY);
 
-            if let Some(enpassant) = chessboard.en_passant_target_square {
-                let capturable_position = if white_is_side_to_move {
-                    enpassant + 8
-                } else {
-                    enpassant - 8
-                };
-                if capturable_position == new_position {
-                    legal_moves.push(LegalMove {
-                        from: position,
-                        to: new_position,
-                        move_type: MoveType::Enpassant {
-                            target_square: enpassant,
-                        },
-                        is_capture: true,
-                    });
-                    continue;
-                }
-            }
             legal_moves.push(LegalMove {
                 from: position,
                 to: new_position,
@@ -181,24 +213,6 @@ pub fn single_step_get_pseudo_legal_moves(
 
         let is_capture = !(target_square == EMPTY);
 
-        if let Some(enpassant) = chessboard.en_passant_target_square {
-            let capturable_position = if white_is_side_to_move {
-                enpassant + 8
-            } else {
-                enpassant - 8
-            };
-            if capturable_position == new_position {
-                legal_moves.push(LegalMove {
-                    from: position,
-                    to: new_position,
-                    move_type: MoveType::Enpassant {
-                        target_square: enpassant,
-                    },
-                    is_capture: true,
-                });
-                continue;
-            }
-        }
         legal_moves.push(LegalMove {
             from: position,
             to: new_position,
@@ -347,4 +361,40 @@ pub fn can_move_to_position(side_to_move: Players, square: i8) -> MoveStatus {
             MoveStatus::CaptureMove
         }
     }
+}
+
+pub fn is_en_passant_capture(chessboard: &ChessBoard, new_position: usize) -> bool {
+    if let Some(en_passant) = chessboard.en_passant_target_square {
+        let target_square = if chessboard.side_to_move == Players::White {
+            en_passant + 8
+        } else {
+            en_passant - 8
+        };
+
+        if target_square == new_position {
+            return true;
+        }
+    }
+    false
+}
+
+pub fn check_promotion_and_generate_moves(
+    legal_move: LegalMove,
+    promotion_pieces: &[i8],
+) -> Vec<LegalMove> {
+    let mut pawn_moves = Vec::new();
+
+    if legal_move.to / 8 == 0 || legal_move.to / 8 == 7 {
+        for piece in promotion_pieces {
+            let mut promotion_move = legal_move.clone();
+            promotion_move.move_type = MoveType::PawnMove {
+                promotion_move: Some(*piece),
+            };
+            pawn_moves.push(promotion_move);
+        }
+    } else {
+        pawn_moves.push(legal_move);
+    }
+
+    pawn_moves
 }

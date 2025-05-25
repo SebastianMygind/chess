@@ -1,6 +1,9 @@
+use iced::widget::shader::wgpu::PipelineLayout;
+
 use crate::{
     chessboard::{
-        BBISHOP, BKNIGHT, BQUEEN, BROOK, ChessBoard, Move, Players, WBISHOP, WKNIGHT, WQUEEN, WROOK,
+        BBISHOP, BKNIGHT, BQUEEN, BROOK, ChessBoard, EMPTY, Move, Players, WBISHOP, WKNIGHT,
+        WQUEEN, WROOK,
     },
     moves::{
         BPAWN_ATTACK_MOVES, BPAWN_MOVE, BPAWN_START_MOVES, LegalMove, MoveType, WPAWN_ATTACK_MOVES,
@@ -8,10 +11,18 @@ use crate::{
     },
 };
 
-use super::{MoveStatus, can_move_to_position};
+use super::{
+    MoveStatus, can_move_to_position, check_promotion_and_generate_moves, is_en_passant_capture,
+};
 
 pub fn get_pawn_moves(position: usize, chessboard: &ChessBoard) -> Vec<LegalMove> {
     let mut moves = Vec::with_capacity(4);
+
+    let promotions = if Players::White == chessboard.side_to_move {
+        [WQUEEN, WROOK, WBISHOP, WKNIGHT]
+    } else {
+        [BQUEEN, BROOK, BBISHOP, BKNIGHT]
+    };
 
     let (pawn_moves, attack_moves): (&[Move], [Move; 2]) = if position / 8 == 1 {
         if chessboard.side_to_move == Players::White {
@@ -48,12 +59,6 @@ pub fn get_pawn_moves(position: usize, chessboard: &ChessBoard) -> Vec<LegalMove
 
             MoveStatus::Move => {
                 if is_promotion_move {
-                    let promotions = if Players::White == chessboard.side_to_move {
-                        [WQUEEN, WROOK, WBISHOP, WKNIGHT]
-                    } else {
-                        [BQUEEN, BROOK, BBISHOP, BKNIGHT]
-                    };
-
                     for promotion in promotions {
                         moves.push(LegalMove {
                             from: position,
@@ -89,6 +94,42 @@ pub fn get_pawn_moves(position: usize, chessboard: &ChessBoard) -> Vec<LegalMove
                         move_type,
                         is_capture: false,
                     });
+                }
+            }
+        }
+    }
+
+    for attack_move in attack_moves {
+        if let Some(new_position) = attack_move.get_new_position(position) {
+            let can_capture = if chessboard.side_to_move == Players::White {
+                |x: i8| x.is_negative()
+            } else {
+                |x: i8| x.is_positive()
+            };
+
+            if can_capture(chessboard.board[new_position])
+                && chessboard.board[new_position] != EMPTY
+            {
+                if is_en_passant_capture(chessboard, new_position) {
+                    let target_square = chessboard.en_passant_target_square.expect("checked above");
+                    moves.push(LegalMove {
+                        from: position,
+                        to: new_position,
+                        move_type: MoveType::Enpassant { target_square },
+                        is_capture: true,
+                    });
+                } else {
+                    moves.append(&mut check_promotion_and_generate_moves(
+                        LegalMove {
+                            from: position,
+                            to: new_position,
+                            move_type: MoveType::PawnMove {
+                                promotion_move: None,
+                            },
+                            is_capture: true,
+                        },
+                        &promotions,
+                    ));
                 }
             }
         }
