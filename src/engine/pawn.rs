@@ -1,5 +1,3 @@
-use iced::widget::shader::wgpu::PipelineLayout;
-
 use crate::{
     chessboard::{
         BBISHOP, BKNIGHT, BQUEEN, BROOK, ChessBoard, EMPTY, Move, Players, WBISHOP, WKNIGHT,

@@ -33,9 +33,6 @@ pub enum FenErrorKind {
     ParserError(FenArguments),
 }
 
-#[derive(Debug)]
-pub struct MoveError {}
-
 #[derive(Debug, PartialEq)]
 pub struct FenError {
     pub kind: FenErrorKind,
@@ -79,7 +76,7 @@ pub trait Fen {
                 return match e {
                     FenError {
                         kind: FenErrorKind::MissingArgument(FenArguments::HalfMoveClock),
-                        given_string: fen_string,
+                        given_string: _fen_string,
                     } => Ok(FenType::NoCounter),
                     _ => return Err(e),
                 };
@@ -111,14 +108,10 @@ impl FenError {
     pub fn missing_argument(argument: FenArguments, fen_string: String) -> Self {
         Self::new(FenErrorKind::MissingArgument(argument), fen_string)
     }
-
-    pub fn parser_error(arguments: FenArguments, given_string: String) -> Self {
-        Self::new(FenErrorKind::ParserError(arguments), given_string)
-    }
 }
 
 impl std::fmt::Display for FenError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, _f: &mut Formatter<'_>) -> std::fmt::Result {
         todo!()
     }
 }

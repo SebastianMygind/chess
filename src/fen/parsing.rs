@@ -150,7 +150,7 @@ pub fn parse_epawn(str_part: &str) -> Option<Option<usize>> {
         let rank = parse_rank(char)?;
         let file = parse_file(chars.next()?)?;
 
-        epawn = Some(((rank * 8) + file));
+        epawn = Some((rank * 8) + file);
     }
 
     Some(epawn)

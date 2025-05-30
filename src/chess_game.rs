@@ -1,12 +1,9 @@
-mod styling;
-
-use styling::{DANGER_SQUARE, DARK_SQUARE, LIGHT_SQUARE};
-
 use crate::chessboard::{
     BBISHOP, BKING, BKNIGHT, BPAWN, BQUEEN, BROOK, ChessBoard, EMPTY, Players, WBISHOP, WKING,
     WKNIGHT, WPAWN, WQUEEN, WROOK,
 };
-use crate::fen::parsing::parse_file;
+use crate::engine::ChessEngine;
+use crate::moves::MoveType;
 use iced::widget::{Row, button, column, container, row, svg, text};
 use iced::{self, ContentFit, Event, Length, Pixels};
 use iced::{Element, Fill, Task};
@@ -137,10 +134,31 @@ impl ChessGame {
                         unreachable!("Should only be able to move when initialized!")
                     }
                     Some(mut game) => {
-                        game.board[square] = game.board[from];
-                        game.board[from] = 0;
-                        self.game = Some(game);
-                        self.selected_square = None;
+                        if from == square {
+                            self.selected_square = None;
+                            return Task::none();
+                        }
+
+                        for legal_move in game.legal_moves().iter() {
+                            match legal_move.move_type {
+                                MoveType::PawnMove {
+                                    promotion_move: Some(_prom_move),
+                                } => {
+                                    if legal_move.from == from && legal_move.to == square {
+                                        todo!("Implement a way to choose promotion in gui.")
+                                    }
+                                }
+
+                                _ => {
+                                    if legal_move.from == from && legal_move.to == square {
+                                        game.make_move(*legal_move);
+                                        self.game = Some(game);
+                                        self.selected_square = None;
+                                        return Task::none();
+                                    }
+                                }
+                            }
+                        }
                         Task::none()
                     }
                 },
@@ -259,6 +277,7 @@ fn render_board(state: &ChessGame, square_size: Length) -> iced::widget::Column<
             board_state.board[get_corrected_index(i, state.perspective)],
             &state.piece_sprite,
             state.perspective,
+            state.selected_square,
             square_size,
         ));
         if i % 8 == 7 {
@@ -274,6 +293,7 @@ fn get_button_from_square(
     square: i8,
     pieces: &SvgPieces,
     perspective: Players,
+    selected_square: Option<usize>,
     square_size: Length,
 ) -> iced::widget::Button<Message> {
     let correct_index = get_corrected_index(position, perspective);
@@ -299,30 +319,41 @@ fn get_button_from_square(
     };
 
     if should_be_light_square(correct_index) {
-        button.style(|theme: &iced::Theme, status| {
+        button.style(move |theme: &iced::Theme, status| {
             let palette = theme.palette();
 
-            match status {
-                button::Status::Active => button::Style::default().with_background(palette.text),
-                button::Status::Hovered => {
-                    button::Style::default().with_background(palette.text.scale_alpha(0.7))
+            if selected_square.is_some() && selected_square.expect("msg") == correct_index {
+                button::Style::default().with_background(palette.text.scale_alpha(0.5))
+            } else {
+                match status {
+                    button::Status::Active => {
+                        button::Style::default().with_background(palette.text)
+                    }
+                    button::Status::Hovered => {
+                        button::Style::default().with_background(palette.text.scale_alpha(0.7))
+                    }
+                    _ => button::primary(theme, status),
                 }
-                _ => button::primary(theme, status),
             }
         })
     } else {
-        button.style(|theme: &iced::Theme, status| {
+        button.style(move |theme: &iced::Theme, status| {
             let palette = theme.extended_palette();
-            match status {
-                button::Status::Active => {
-                    button::Style::default().with_background(palette.primary.strong.color)
-                }
 
-                button::Status::Hovered => {
-                    button::Style::default().with_background(palette.primary.weak.color)
-                }
+            if selected_square.is_some() && selected_square.expect("msg") == correct_index {
+                button::Style::default().with_background(palette.primary.base.color)
+            } else {
+                match status {
+                    button::Status::Active => {
+                        button::Style::default().with_background(palette.primary.strong.color)
+                    }
 
-                _ => button::primary(theme, status),
+                    button::Status::Hovered => {
+                        button::Style::default().with_background(palette.primary.weak.color)
+                    }
+
+                    _ => button::primary(theme, status),
+                }
             }
         })
     }

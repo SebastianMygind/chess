@@ -1,4 +1,4 @@
-use crate::chessboard::{MAIL_BOX_64, MAIL_BOX_120, Move};
+use crate::chessboard::Move;
 
 #[derive(Debug, Clone, Copy)]
 pub enum MoveType {

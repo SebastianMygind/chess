@@ -16,8 +16,8 @@ use crate::chessboard::{
     WKING, WKNIGHT, WPAWN, WQUEEN, WROOK,
 };
 use crate::moves::{
-    ALL_DIRECTION_MOVES, ANTI_DIAGONAL_MOVES, BPAWN_ATTACK_MOVES, DIAGONAL_MOVES, KNIGHT_MOVES,
-    LegalMove, MoveType, RatedMove, WPAWN_ATTACK_MOVES,
+    ANTI_DIAGONAL_MOVES, BPAWN_ATTACK_MOVES, DIAGONAL_MOVES, KNIGHT_MOVES, LegalMove, MoveType,
+    WPAWN_ATTACK_MOVES,
 };
 
 pub trait ChessEngine {
