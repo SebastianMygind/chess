@@ -22,18 +22,21 @@ pub fn get_pawn_moves(position: usize, chessboard: &ChessBoard) -> Vec<LegalMove
         [BQUEEN, BROOK, BBISHOP, BKNIGHT]
     };
 
-    let (pawn_moves, attack_moves): (&[Move], [Move; 2]) = if position / 8 == 1 {
-        if chessboard.side_to_move == Players::White {
+    /*This is not correct for the black pawn, as the division rule does not apply correctly*/
+
+    let (pawn_moves, attack_moves): (&[Move], [Move; 2]) = if chessboard.side_to_move == Players::White {
+        if position > 7 && position < 16 {
             (&WPAWN_START_MOVES, WPAWN_ATTACK_MOVES)
         } else {
-            (&BPAWN_START_MOVES, BPAWN_ATTACK_MOVES)
+            (&[WPAWN_MOVE], WPAWN_ATTACK_MOVES)
         }
     } else {
-        if chessboard.side_to_move == Players::White {
-            (&[WPAWN_MOVE], WPAWN_ATTACK_MOVES)
+        if position > 47 && position < 56 {
+            (&BPAWN_START_MOVES, BPAWN_ATTACK_MOVES)
         } else {
             (&[BPAWN_MOVE], BPAWN_ATTACK_MOVES)
         }
+        
     };
 
     for pawn_move in pawn_moves {
