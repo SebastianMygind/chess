@@ -24,20 +24,18 @@ pub fn get_pawn_moves(position: usize, chessboard: &ChessBoard) -> Vec<LegalMove
 
     /*This is not correct for the black pawn, as the division rule does not apply correctly*/
 
-    let (pawn_moves, attack_moves): (&[Move], [Move; 2]) = if chessboard.side_to_move == Players::White {
-        if position > 7 && position < 16 {
-            (&WPAWN_START_MOVES, WPAWN_ATTACK_MOVES)
-        } else {
-            (&[WPAWN_MOVE], WPAWN_ATTACK_MOVES)
-        }
-    } else {
-        if position > 47 && position < 56 {
+    let (pawn_moves, attack_moves): (&[Move], [Move; 2]) =
+        if chessboard.side_to_move == Players::White {
+            if position > 7 && position < 16 {
+                (&WPAWN_START_MOVES, WPAWN_ATTACK_MOVES)
+            } else {
+                (&[WPAWN_MOVE], WPAWN_ATTACK_MOVES)
+            }
+        } else if position > 47 && position < 56 {
             (&BPAWN_START_MOVES, BPAWN_ATTACK_MOVES)
         } else {
             (&[BPAWN_MOVE], BPAWN_ATTACK_MOVES)
-        }
-        
-    };
+        };
 
     for pawn_move in pawn_moves {
         let new_position = match pawn_move.get_new_position(position) {
@@ -47,11 +45,7 @@ pub fn get_pawn_moves(position: usize, chessboard: &ChessBoard) -> Vec<LegalMove
             }
         };
 
-        let is_promotion_move = if new_position / 8 == 7 || new_position / 8 == 0 {
-            true
-        } else {
-            false
-        };
+        let is_promotion_move = new_position / 8 == 7 || new_position / 8 == 0;
 
         match can_move_to_position(chessboard.side_to_move, chessboard.board[new_position]) {
             MoveStatus::NoMove | MoveStatus::CaptureMove => {
@@ -79,14 +73,12 @@ pub fn get_pawn_moves(position: usize, chessboard: &ChessBoard) -> Vec<LegalMove
                         } else {
                             MoveType::PawnDoubleMove
                         }
-                    } else {
-                        if position - 8 == new_position {
-                            MoveType::PawnMove {
-                                promotion_move: None,
-                            }
-                        } else {
-                            MoveType::PawnDoubleMove
+                    } else if position - 8 == new_position {
+                        MoveType::PawnMove {
+                            promotion_move: None,
                         }
+                    } else {
+                        MoveType::PawnDoubleMove
                     };
 
                     moves.push(LegalMove {

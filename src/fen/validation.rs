@@ -31,10 +31,10 @@ where
 }
 
 pub fn is_position_valid(position: &str) -> bool {
-    let mut ranks = position.split('/');
+    let ranks = position.split('/');
     let mut rank: u32 = 0;
 
-    while let Some(rank_string) = ranks.next() {
+    for rank_string in ranks {
         let mut file = 0;
 
         for char in rank_string.chars() {
@@ -86,11 +86,11 @@ pub fn is_side_to_move_valid(side_to_move: &str) -> bool {
 }
 
 pub fn is_castling_valid(castling_ability: &str) -> bool {
-    let mut chars = castling_ability.chars();
+    let chars = castling_ability.chars();
     let mut has_no_ability = false;
     let mut char_occurences: [u32; 4] = [0; 4]; //WKing, WQueen, BKing, BQueen
 
-    while let Some(c) = chars.next() {
+    for c in chars {
         match c {
             'K' => char_occurences[0] += 1,
             'Q' => char_occurences[1] += 1,

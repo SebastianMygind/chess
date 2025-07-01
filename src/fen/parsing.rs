@@ -38,7 +38,10 @@ impl<'a> PositionIterator<'a> {
     fn parse_next_char(&mut self) -> Option<i8> {
         if let Some(char) = self.chars.next() {
             if let Some(digit) = char.to_digit(10) {
-                self.empty_remainder = Some(digit - 1);
+                if digit > 1 {
+                    self.empty_remainder = Some(digit - 1);
+                }
+
                 return Some(EMPTY);
             }
 
@@ -76,7 +79,7 @@ impl<'a> Iterator for PositionIterator<'a> {
 
     fn next(&mut self) -> Option<Self::Item> {
         if let Some(e_remainder) = self.empty_remainder {
-            if e_remainder <= 1 {
+            if e_remainder == 1 {
                 self.empty_remainder = None;
             } else {
                 self.empty_remainder = Some(e_remainder - 1);
@@ -96,8 +99,8 @@ pub fn parse_position(str_part: &str) -> Option<[i8; 64]> {
         chars: str_part.chars(),
     };
 
-    for i in (0..=(BOARD_HEIGHT - 1)).rev() {
-        for j in 0..=(BOARD_WIDTH - 1) {
+    for i in (0..BOARD_HEIGHT).rev() {
+        for j in 0..BOARD_WIDTH {
             board[(i * 8) + j] = position_iterator.next()?;
         }
     }

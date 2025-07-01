@@ -52,7 +52,7 @@ impl ChessEngine for ChessBoard {
 
     fn perft(&self, depth: u32) -> (Vec<(String, u32)>, u32) {
         if depth == 0 {
-            return (vec![(String::from("Depth = 0"), 0)], 0);
+            (vec![(String::from("Depth = 0"), 0)], 0)
         } else if depth == 1 {
             let moves = self.legal_moves();
             let mut result: Vec<(String, u32)> = Vec::new();
@@ -64,13 +64,13 @@ impl ChessEngine for ChessBoard {
                 result.push((format!("{from}, {to}"), 1));
             }
 
-            let move_count = if moves.len() == 0 {
+            let move_count = if moves.is_empty() {
                 1
             } else {
                 moves.len() as u32
             };
 
-            return (result, move_count);
+            (result, move_count)
         } else {
             let moves = self.legal_moves();
             let mut result: Vec<(String, u32)> = Vec::new();
@@ -87,7 +87,7 @@ impl ChessEngine for ChessBoard {
                 move_count += leaf_count;
                 result.push((format!("{from}, {to}"), leaf_count));
             }
-            return (result, move_count);
+            (result, move_count)
         }
     }
 }
@@ -170,7 +170,7 @@ pub fn get_multi_step_pseudo_legal_moves(
                 break;
             }
 
-            let is_capture = !(target_square == EMPTY);
+            let is_capture = target_square != EMPTY;
 
             legal_moves.push(LegalMove {
                 from: position,
@@ -211,7 +211,7 @@ pub fn single_step_get_pseudo_legal_moves(
             continue;
         }
 
-        let is_capture = !(target_square == EMPTY);
+        let is_capture = target_square != EMPTY;
 
         legal_moves.push(LegalMove {
             from: position,
@@ -352,14 +352,12 @@ pub fn can_move_to_position(side_to_move: Players, square: i8) -> MoveStatus {
         } else {
             MoveStatus::CaptureMove
         }
+    } else if square == EMPTY {
+        MoveStatus::Move
+    } else if square.is_negative() {
+        MoveStatus::NoMove
     } else {
-        if square == EMPTY {
-            MoveStatus::Move
-        } else if square.is_negative() {
-            MoveStatus::NoMove
-        } else {
-            MoveStatus::CaptureMove
-        }
+        MoveStatus::CaptureMove
     }
 }
 
@@ -386,7 +384,7 @@ pub fn check_promotion_and_generate_moves(
 
     if legal_move.to / 8 == 0 || legal_move.to / 8 == 7 {
         for piece in promotion_pieces {
-            let mut promotion_move = legal_move.clone();
+            let mut promotion_move = legal_move;
             promotion_move.move_type = MoveType::PawnMove {
                 promotion_move: Some(*piece),
             };

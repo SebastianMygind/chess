@@ -166,13 +166,10 @@ impl ChessGame {
             Message::Quit => iced::exit(),
 
             Message::Event(event) => match event {
-                Event::Window(window_event) => match window_event {
-                    iced::window::Event::Resized(size) => {
-                        self.window_size = Some(size);
-                        iced::Task::none()
-                    }
-                    _ => iced::Task::none(),
-                },
+                Event::Window(iced::window::Event::Resized(size)) => {
+                    self.window_size = Some(size);
+                    iced::Task::none()
+                }
                 _ => iced::Task::none(),
             },
             Message::SwitchPerspective => {
@@ -211,7 +208,7 @@ impl ChessGame {
                         button(text("switch perspective")).on_press(Message::SwitchPerspective)
                     ]);
 
-                    let board = render_board(&self, square_length);
+                    let board = render_board(self, square_length);
 
                     column![
                         top_bar,
