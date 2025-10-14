@@ -259,7 +259,10 @@ impl ChessGame {
     }
 }
 
-fn render_board(state: &ChessGame, square_size: Length) -> iced::widget::Column<'_, Message> {
+fn render_board<'a>(
+    state: &'a ChessGame,
+    square_size: Length,
+) -> iced::widget::Column<'a, Message> {
     let mut board_columns = iced::widget::Column::new();
     let mut board_rows = iced::widget::Row::new();
 
@@ -285,14 +288,14 @@ fn render_board(state: &ChessGame, square_size: Length) -> iced::widget::Column<
     board_columns
 }
 
-fn get_button_from_square(
+fn get_button_from_square<'a>(
     position: usize,
     square: i8,
-    pieces: &SvgPieces,
+    pieces: &'a SvgPieces,
     perspective: Players,
     selected_square: Option<usize>,
     square_size: Length,
-) -> iced::widget::Button<Message> {
+) -> iced::widget::Button<'a, Message> {
     let correct_index = get_corrected_index(position, perspective);
 
     let button = match square {
@@ -378,9 +381,9 @@ pub fn should_be_light_square(position: usize) -> bool {
 
     let col = (position % 8) + 1;
 
-    if row % 2 == 0 {
-        col % 2 != 0
+    if row.is_multiple_of(2) {
+        !col.is_multiple_of(2)
     } else {
-        col % 2 == 0
+        col.is_multiple_of(2)
     }
 }

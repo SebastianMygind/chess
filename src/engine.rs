@@ -241,11 +241,10 @@ pub fn king_is_attacked_by_pawns(board: &[i8; 64], king_position: usize) -> bool
     };
 
     for attack_move in attack_moves {
-        if let Some(pos) = attack_move.get_new_position(king_position) {
-            if pawn == board[pos] {
+        if let Some(pos) = attack_move.get_new_position(king_position)
+            && pawn == board[pos] {
                 return true;
             }
-        }
     }
 
     false
@@ -327,11 +326,10 @@ pub fn king_is_attacked_by_knights(board: &[i8; 64], king_position: usize) -> bo
     };
 
     for attack_move in KNIGHT_MOVES {
-        if let Some(pos) = attack_move.get_new_position(king_position) {
-            if knight == board[pos] {
+        if let Some(pos) = attack_move.get_new_position(king_position)
+            && knight == board[pos] {
                 return true;
             }
-        }
     }
 
     false
