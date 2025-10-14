@@ -8,15 +8,19 @@ use chess_game::ChessGame;
 use chessboard::ChessBoard;
 use engine::ChessEngine;
 use fen::Fen;
-fn main() -> iced::Result {
-    let mut game = ChessGame::default();
 
-    let depth = 1;
+const RUN_GAME: bool = false;
+
+fn main() {
+    let depth = 8;
 
     let test_board = ChessBoard::set_fen_position("4k3/8/8/8/8/8/8/4K1N1 b - -").unwrap();
     let (_, moves) = test_board.perft(depth);
 
     println!("perft depth {depth}: {moves}");
 
-    game.run()
+    if RUN_GAME {
+        let mut game = ChessGame::default();
+        _ = game.run();
+    }
 }
