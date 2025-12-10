@@ -252,7 +252,8 @@ impl ChessGame {
     }
 
     pub fn run(&mut self) -> iced::Result {
-        iced::application("Chess", ChessGame::update, ChessGame::view)
+        iced::application(ChessGame::default, ChessGame::update, ChessGame::view)
+            .title("Chess")
             .theme(ChessGame::theme)
             .subscription(ChessGame::subscription)
             .run()
@@ -269,7 +270,7 @@ fn render_board<'a>(
     let board_state = state
         .game
         .to_owned()
-        .expect("Expect the board here from callin function!");
+        .expect("Expect the board here from calling function!");
 
     for i in 0..64 {
         board_rows = board_rows.push(get_button_from_square(
