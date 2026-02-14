@@ -150,8 +150,8 @@ pub fn parse_epawn(str_part: &str) -> Option<Option<usize>> {
     let char = chars.next()?;
 
     if char != '-' {
-        let rank = parse_rank(char)?;
-        let file = parse_file(chars.next()?)?;
+        let file = parse_file(char)?;
+        let rank = parse_rank(chars.next()?)?;
 
         epawn = Some((rank * 8) + file);
     }

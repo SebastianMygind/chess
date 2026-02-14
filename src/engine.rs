@@ -17,13 +17,13 @@ use crate::chessboard::{
 };
 use crate::moves::{
     ANTI_DIAGONAL_MOVES, BPAWN_ATTACK_MOVES, DIAGONAL_MOVES, KNIGHT_MOVES, LegalMove, MoveType,
-    WPAWN_ATTACK_MOVES,
+    WPAWN_ATTACK_MOVES, concat_const_arrays,
 };
 
 pub trait ChessEngine {
     fn legal_moves(&self) -> Vec<LegalMove>;
 
-    fn perft(&self, depth: u32) -> (Vec<(String, u32)>, u32);
+    fn perft(&self, depth: u64) -> (Vec<(String, u64)>, u64);
 }
 
 impl ChessEngine for ChessBoard {
@@ -50,45 +50,27 @@ impl ChessEngine for ChessBoard {
         legal_moves
     }
 
-    fn perft(&self, depth: u32) -> (Vec<(String, u32)>, u32) {
+    fn perft(&self, depth: u64) -> (Vec<(String, u64)>, u64) {
         if depth == 0 {
-            (vec![(String::from("Depth = 0"), 0)], 0)
-        } else if depth == 1 {
-            let moves = self.legal_moves();
-            let mut result: Vec<(String, u32)> = Vec::new();
-
-            for legal in moves.iter() {
-                let from = legal.from;
-                let to = legal.to;
-
-                result.push((format!("{from}, {to}"), 1));
-            }
-
-            let move_count = if moves.is_empty() {
-                1
-            } else {
-                moves.len() as u32
-            };
-
-            (result, move_count)
-        } else {
-            let moves = self.legal_moves();
-            let mut result: Vec<(String, u32)> = Vec::new();
-            let mut move_count: u32 = 0;
-
-            for legal in moves {
-                let from = legal.from;
-                let to = legal.to;
-
-                let mut new_board = self.clone();
-
-                new_board.make_move(legal);
-                let (_, leaf_count) = new_board.perft(depth - 1);
-                move_count += leaf_count;
-                result.push((format!("{from}, {to}"), leaf_count));
-            }
-            (result, move_count)
+            return (vec![], 1);
         }
+
+        let mut move_sum = 0;
+        let mut move_details = Vec::new();
+
+        for legal_move in self.legal_moves() {
+            let mut new_board = self.clone();
+            new_board.make_move(legal_move);
+            let (_, count) = new_board.perft(depth - 1);
+
+            move_sum += count;
+
+            move_details.push((legal_move.to_string(), count));
+        }
+
+        move_details.sort_by(|a, b| a.0.cmp(&b.0));
+
+        return (move_details, move_sum);
     }
 }
 
@@ -228,6 +210,7 @@ fn king_is_checked(board: &[i8; 64], king_position: usize) -> bool {
     /* Check per individual pieces, i.e. Diagonal moves: check only Queen, Bishop.. Anti-diagonal moves: check only Queen, Rook.. Pawn attacks */
 
     king_is_attacked_by_pawns(board, king_position)
+        || king_is_attacked_by_opposing_king(board, king_position)
         || king_is_attacked_on_diagonals(board, king_position)
         || king_is_attacked_on_anti_diagonals(board, king_position)
         || king_is_attacked_by_knights(board, king_position)
@@ -278,6 +261,30 @@ pub fn king_is_attacked_on_diagonals(board: &[i8; 64], king_position: usize) -> 
                 return true;
             } else {
                 break;
+            }
+        }
+    }
+
+    false
+}
+
+pub fn king_is_attacked_by_opposing_king(board: &[i8; 64], king_position: usize) -> bool {
+    let moves = concat_const_arrays(DIAGONAL_MOVES, ANTI_DIAGONAL_MOVES);
+
+    let attack_king = if board[king_position].is_positive() {
+        BKING
+    } else {
+        WKING
+    };
+
+    for attack_move in moves {
+        let pos_opt = attack_move.get_new_position(king_position);
+
+        if let Some(position) = pos_opt {
+            let square = board[position];
+
+            if square == attack_king {
+                return true;
             }
         }
     }
