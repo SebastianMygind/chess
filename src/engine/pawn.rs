@@ -129,3 +129,23 @@ pub fn get_pawn_moves(position: usize, chessboard: &ChessBoard) -> Vec<LegalMove
     }
     moves
 }
+
+fn get_simple_moves(position: usize, chessboard: &ChessBoard) -> Vec<LegalMove> {}
+
+fn get_simple_captures(position: usize, chessboard: &ChessBoard) -> Vec<LegalMove> {}
+
+fn get_en_passant_capture(position: usize, chessboard: &ChessBoard) -> Option<LegalMove> {}
+
+pub fn get_pawn_moves_v2(position: usize, chessboard: &ChessBoard) -> Vec<LegalMove> {
+    let mut moves = Vec::new();
+
+    moves.append(&mut get_simple_moves(position, chessboard));
+
+    moves.append(&mut get_simple_captures(position, chessboard));
+
+    if let Some(en_passant) = get_en_passant_capture(position, chessboard) {
+        moves.push(en_passant);
+    }
+
+    moves
+}
