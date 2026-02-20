@@ -130,21 +130,71 @@ pub fn get_pawn_moves(position: usize, chessboard: &ChessBoard) -> Vec<LegalMove
     moves
 }
 
-fn get_simple_moves(position: usize, chessboard: &ChessBoard) -> Vec<LegalMove> {}
+// A simple move is a move that moves one rank, i.e. up or down.
+fn get_simple_moves(position: usize, chessboard: &ChessBoard) -> Option<LegalMove> {}
 
-fn get_simple_captures(position: usize, chessboard: &ChessBoard) -> Vec<LegalMove> {}
+// Double moves are only possible if a pawn has not been moved. Moves up/down 2 ranks.
+fn get_double_move(position: usize, chessboard: &ChessBoard) -> Option<LegalMove> {}
 
+// A simple capture is a pawn moving diagonally one rank and one file onto an enemy piece, en passant not included.
+fn get_simple_capture(position: usize, chessboard: &ChessBoard) -> Option<LegalMove> {}
+
+// Self explanatory function.
 fn get_en_passant_capture(position: usize, chessboard: &ChessBoard) -> Option<LegalMove> {}
+
+// A promotion move is both a move, but also a capture move that ends in a promotion.
+fn get_promotion(
+    position: usize,
+    chessboard: &ChessBoard,
+    promotion_pieces: &[i8],
+) -> Option<Vec<LegalMove>> {
+}
 
 pub fn get_pawn_moves_v2(position: usize, chessboard: &ChessBoard) -> Vec<LegalMove> {
     let mut moves = Vec::new();
 
-    moves.append(&mut get_simple_moves(position, chessboard));
+    let promotions = if Players::White == chessboard.side_to_move {
+        [WQUEEN, WROOK, WBISHOP, WKNIGHT]
+    } else {
+        [BQUEEN, BROOK, BBISHOP, BKNIGHT]
+    };
 
-    moves.append(&mut get_simple_captures(position, chessboard));
+    // current rank, zero indexed
+    let current_rank = position / 8;
 
-    if let Some(en_passant) = get_en_passant_capture(position, chessboard) {
-        moves.push(en_passant);
+    let (double_pawn_rank, promotion_rank, en_passant_rank) =
+        if Players::White == chessboard.side_to_move {
+            (1, 6, 4)
+        } else {
+            (6, 1, 3)
+        };
+
+    // Checking different cases
+
+    if current_rank == promotion_rank {
+        if let Some(mut promotions) = get_promotion(position, chessboard, &promotions) {
+            moves.append(&mut promotions);
+        }
+    } else {
+        if let Some(simple_move) = get_simple_capture(position, chessboard) {
+            moves.push(simple_move)
+        }
+
+        if let Some(simple_attack) = get_simple_capture(position, chessboard) {
+            moves.push(simple_attack);
+        }
+    }
+
+    if double_pawn_rank == current_rank {
+        if let Some(double_pawn_move) = get_double_move(position, chessboard) {
+            moves.push(double_pawn_move);
+        }
+    }
+
+    if current_rank == en_passant_rank && chessboard.en_passant_target_square.is_some() {
+        if let Some(en_passant_move) = get_en_passant_capture(position, chessboard) {
+            moves.push(en_passant_move);
+        }
     }
 
     moves
