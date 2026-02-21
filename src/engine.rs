@@ -16,9 +16,9 @@ use crate::chessboard::{
     BBISHOP, BKING, BKNIGHT, BPAWN, BQUEEN, BROOK, ChessBoard, EMPTY, Move, Players, WBISHOP,
     WKING, WKNIGHT, WPAWN, WQUEEN, WROOK,
 };
+use crate::engine::pawn::{BPAWN_ATTACK_MOVES, WPAWN_ATTACK_MOVES};
 use crate::moves::{
-    ANTI_DIAGONAL_MOVES, BPAWN_ATTACK_MOVES, DIAGONAL_MOVES, KNIGHT_MOVES, LegalMove, MoveType,
-    WPAWN_ATTACK_MOVES, concat_const_arrays,
+    ANTI_DIAGONAL_MOVES, DIAGONAL_MOVES, KNIGHT_MOVES, LegalMove, MoveType, concat_const_arrays,
 };
 
 pub trait ChessEngine {
@@ -71,7 +71,7 @@ impl ChessEngine for ChessBoard {
 
         move_details.sort_by(|a, b| a.0.cmp(&b.0));
 
-        return (move_details, move_sum);
+        (move_details, move_sum)
     }
 }
 
@@ -343,64 +343,4 @@ pub fn king_is_attacked_by_knights(board: &[i8; 64], king_position: usize) -> bo
     }
 
     false
-}
-
-pub enum MoveStatus {
-    NoMove,
-    Move,
-    CaptureMove,
-}
-
-pub fn can_move_to_position(side_to_move: Players, square: i8) -> MoveStatus {
-    if side_to_move == Players::White {
-        if square == EMPTY {
-            MoveStatus::Move
-        } else if square.is_positive() {
-            MoveStatus::NoMove
-        } else {
-            MoveStatus::CaptureMove
-        }
-    } else if square == EMPTY {
-        MoveStatus::Move
-    } else if square.is_negative() {
-        MoveStatus::NoMove
-    } else {
-        MoveStatus::CaptureMove
-    }
-}
-
-pub fn is_en_passant_capture(chessboard: &ChessBoard, new_position: usize) -> bool {
-    if let Some(en_passant) = chessboard.en_passant_target_square {
-        let target_square = if chessboard.side_to_move == Players::White {
-            en_passant + 8
-        } else {
-            en_passant - 8
-        };
-
-        if target_square == new_position {
-            return true;
-        }
-    }
-    false
-}
-
-pub fn check_promotion_and_generate_moves(
-    legal_move: LegalMove,
-    promotion_pieces: &[i8],
-) -> Vec<LegalMove> {
-    let mut pawn_moves = Vec::new();
-
-    if legal_move.to / 8 == 0 || legal_move.to / 8 == 7 {
-        for piece in promotion_pieces {
-            let mut promotion_move = legal_move;
-            promotion_move.move_type = MoveType::PawnMove {
-                promotion_move: Some(*piece),
-            };
-            pawn_moves.push(promotion_move);
-        }
-    } else {
-        pawn_moves.push(legal_move);
-    }
-
-    pawn_moves
 }

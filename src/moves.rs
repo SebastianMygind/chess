@@ -1,9 +1,6 @@
 use std::str::FromStr;
 
-use crate::{
-    chessboard::{BBISHOP, BKNIGHT, BQUEEN, BROOK, Move, WBISHOP, WKNIGHT, WQUEEN, WROOK},
-    fen::parsing::parse_rank,
-};
+use crate::chessboard::{BBISHOP, BKNIGHT, BQUEEN, BROOK, Move, WBISHOP, WKNIGHT, WQUEEN, WROOK};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum MoveType {
@@ -30,14 +27,6 @@ pub struct RatedMove {
     chess_move: LegalMove,
     rating: i32,
 }
-
-pub const WPAWN_START_MOVES: [Move; 2] = [Move { dx: 0, dy: 1 }, Move { dx: 0, dy: 2 }];
-pub const WPAWN_MOVE: Move = Move { dx: 0, dy: 1 };
-pub const WPAWN_ATTACK_MOVES: [Move; 2] = [Move { dx: 1, dy: 1 }, Move { dx: -1, dy: 1 }];
-
-pub const BPAWN_START_MOVES: [Move; 2] = [Move { dx: 0, dy: -1 }, Move { dx: 0, dy: -2 }];
-pub const BPAWN_MOVE: Move = Move { dx: 0, dy: -1 };
-pub const BPAWN_ATTACK_MOVES: [Move; 2] = [Move { dx: 1, dy: -1 }, Move { dx: -1, dy: -1 }];
 
 pub const KNIGHT_MOVES: [Move; 8] = [
     Move { dx: 1, dy: 2 },
@@ -143,11 +132,11 @@ impl FromStr for LegalMove {
     type Err = LegalMoveParseError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        return Ok(Self {
+        Ok(Self {
             from: 0,
             to: 0,
             move_type: MoveType::Normal,
             is_capture: false,
-        });
+        })
     }
 }
