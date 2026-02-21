@@ -3,6 +3,7 @@ use crate::{
         BBISHOP, BKNIGHT, BQUEEN, BROOK, ChessBoard, EMPTY, Move, Players, WBISHOP, WKNIGHT,
         WQUEEN, WROOK,
     },
+    engine::pawn,
     moves::{
         BPAWN_ATTACK_MOVES, BPAWN_MOVE, BPAWN_START_MOVES, LegalMove, MoveType, WPAWN_ATTACK_MOVES,
         WPAWN_MOVE, WPAWN_START_MOVES,
@@ -131,7 +132,7 @@ pub fn get_pawn_moves(position: usize, chessboard: &ChessBoard) -> Vec<LegalMove
 }
 
 // A simple move is a move that moves one rank, i.e. up or down.
-fn get_simple_moves(position: usize, chessboard: &ChessBoard) -> Option<LegalMove> {}
+fn get_simple_move(position: usize, chessboard: &ChessBoard) -> Option<LegalMove> {}
 
 // Double moves are only possible if a pawn has not been moved. Moves up/down 2 ranks.
 fn get_double_move(position: usize, chessboard: &ChessBoard) -> Option<LegalMove> {}
@@ -148,6 +149,48 @@ fn get_promotion(
     chessboard: &ChessBoard,
     promotion_pieces: &[i8],
 ) -> Option<Vec<LegalMove>> {
+}
+
+fn get_simple_promotion(
+    position: usize,
+    chessboard: &ChessBoard,
+    promotion_pieces: &[i8],
+) -> Option<Vec<LegalMove>> {
+    if let Some(pawn_move) = get_simple_move(position, chessboard) {
+        let mut promotions: Vec<LegalMove> = Vec::with_capacity(4);
+
+        for piece in promotion_pieces {
+            let mut promotion_move = pawn_move;
+
+            promotion_move.move_type = MoveType::PawnMove {
+                promotion_move: Some(*piece),
+            };
+            promotions.push(promotion_move);
+        }
+        return Some(promotions);
+    }
+    None
+}
+
+fn get_simple_capture_promotion(
+    position: usize,
+    chessboard: &ChessBoard,
+    promotion_pieces: &[i8],
+) -> Option<Vec<LegalMove>> {
+    if let Some(capture_move) = get_simple_capture(position, chessboard) {
+        let mut promotions: Vec<LegalMove> = Vec::with_capacity(4);
+
+        for piece in promotion_pieces {
+            let mut promotion_capture = capture_move;
+
+            promotion_capture.move_type = MoveType::PawnMove {
+                promotion_move: Some(*piece),
+            };
+            promotions.push(promotion_capture);
+        }
+        return Some(promotions);
+    }
+    None
 }
 
 pub fn get_pawn_moves_v2(position: usize, chessboard: &ChessBoard) -> Vec<LegalMove> {
