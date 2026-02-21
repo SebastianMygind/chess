@@ -4,6 +4,7 @@ mod knight;
 mod pawn;
 mod queen;
 mod rook;
+mod utils;
 use bishop::get_bishop_moves;
 use king::get_king_moves;
 use knight::get_knight_moves;
