@@ -14,18 +14,21 @@ use crate::fen::FEN_STARTING_POSITION;
 const RUN_GAME: bool = false;
 
 fn main() {
-    let depth = 4;
+    let depth = 1;
 
-    let test_board = ChessBoard::set_fen_position(FEN_STARTING_POSITION).unwrap();
+    let test_board = ChessBoard::set_fen_position(
+        "r3k2r/p1ppqpb1/bnN1pnp1/3P4/1p2P3/2N2Q1p/PPPBBPPP/R3K2R b KQkq - 1 1",
+    )
+    .unwrap();
     println!("{:?}", test_board.en_passant_target_square);
 
     let (specifics, moves) = test_board.perft(depth);
 
-    println!("perft depth {depth}: {moves}");
-
     for (c_move, count) in specifics {
         println!("{}: {}", c_move, count)
     }
+
+    println!("perft depth {depth}: {moves}");
 
     if RUN_GAME {
         let mut game = ChessGame::default();

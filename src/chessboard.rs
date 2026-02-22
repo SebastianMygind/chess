@@ -158,6 +158,12 @@ impl ChessBoard {
             MoveType::CastleQueenSide => {
                 let rook_pos_before = move_to_make.from - 4;
 
+                if self.board[move_to_make.from].is_positive() {
+                    self.white_king_position = move_to_make.to;
+                } else {
+                    self.black_king_position = move_to_make.to;
+                }
+
                 self.board[move_to_make.from - 1] = self.board[rook_pos_before];
                 self.board[rook_pos_before] = EMPTY;
 
