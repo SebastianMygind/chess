@@ -75,7 +75,7 @@ mod tests {
         expected_board.board[8] = EMPTY;
         expected_board.board[24] = WPAWN;
         expected_board.side_to_move = Players::Black;
-        expected_board.en_passant_target_square = Some(24);
+        expected_board.en_passant_target_square = Some(16);
 
         chessboard.make_move(legal_move);
 

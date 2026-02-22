@@ -180,7 +180,15 @@ impl ChessBoard {
     }
 
     fn set_enpassant(&mut self, location: usize) {
-        self.en_passant_target_square = Some(location);
+        let new_position;
+
+        if Players::White == self.side_to_move {
+            new_position = location - 8;
+        } else {
+            new_position = location + 8;
+        }
+
+        self.en_passant_target_square = Some(new_position);
     }
 
     fn reset_enpassant(&mut self) {

@@ -149,18 +149,18 @@ fn get_en_passant_capture(
         .en_passant_target_square
         .expect("Checked before calling function.");
 
-    //the position a capturing pawn would end up at after taking the en passant pawn.
-    let en_passant_position = if chessboard.side_to_move == Players::White {
-        target_pawn_square + 8
-    } else {
+    // The location of the pawn which can be captured is.
+    let pawn_location = if chessboard.side_to_move == Players::White {
         target_pawn_square - 8
+    } else {
+        target_pawn_square + 8
     };
 
     let mut can_capture = false;
 
     for direction in pawn_moves[ATTACK_START_INDEX..].iter() {
         if let Some(new_position) = direction.get_new_position(position)
-            && new_position == en_passant_position
+            && new_position == target_pawn_square
             && chessboard.board[new_position] == EMPTY
         {
             can_capture = true;
@@ -174,9 +174,9 @@ fn get_en_passant_capture(
 
     let en_passant_move = LegalMove {
         from: position,
-        to: en_passant_position,
+        to: target_pawn_square,
         move_type: MoveType::Enpassant {
-            target_square: target_pawn_square,
+            target_square: pawn_location,
         },
         is_capture: true,
     };

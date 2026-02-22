@@ -9,14 +9,14 @@ use chessboard::ChessBoard;
 use engine::ChessEngine;
 use fen::Fen;
 
+use crate::fen::FEN_STARTING_POSITION;
+
 const RUN_GAME: bool = false;
 
 fn main() {
-    let depth = 1;
+    let depth = 4;
 
-    let test_board =
-        ChessBoard::set_fen_position("rnbqkbnr/2pppppp/p7/Pp6/8/8/1PPPPPPP/RNBQKBNR w KQkq b6 0 1")
-            .unwrap();
+    let test_board = ChessBoard::set_fen_position(FEN_STARTING_POSITION).unwrap();
     println!("{:?}", test_board.en_passant_target_square);
 
     let (specifics, moves) = test_board.perft(depth);
