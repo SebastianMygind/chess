@@ -4,7 +4,7 @@
 
 #[cfg(test)]
 mod tests {
-    use crate::{ChessBoard, engine::ChessEngine, fen::Fen};
+    use crate::{chessboard::ChessBoard, engine::ChessEngine, fen::Fen};
 
     const KIWI_PETE: &str = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -";
     const EN_PASSANT_1: &str = "4k3/8/8/Pp6/8/8/8/4K3 w - b6 0 1";
