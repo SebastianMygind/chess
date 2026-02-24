@@ -7,28 +7,19 @@ mod tests;
 use chess_game::ChessGame;
 use chessboard::ChessBoard;
 use engine::ChessEngine;
-use fen::Fen;
-
-use crate::fen::FEN_STARTING_POSITION;
 
 const RUN_GAME: bool = false;
 
 fn main() {
-    let depth = 1;
+    let test_board = ChessBoard::default();
 
-    let test_board = ChessBoard::set_fen_position(
-        "r3k2r/p1ppqpb1/bnN1pnp1/3P4/1p2P3/2N2Q1p/PPPBBPPP/R3K2R b KQkq - 1 1",
-    )
-    .unwrap();
-    println!("{:?}", test_board.en_passant_target_square);
-
-    let (specifics, moves) = test_board.perft(depth);
+    let (specifics, moves) = test_board.perft(7);
 
     for (c_move, count) in specifics {
         println!("{}: {}", c_move, count)
     }
 
-    println!("perft depth {depth}: {moves}");
+    println!("perft depth 7: {moves}");
 
     if RUN_GAME {
         let mut game = ChessGame::default();

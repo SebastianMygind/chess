@@ -25,6 +25,17 @@ mod tests {
     }
 
     #[test]
+    fn test_legal_move_3() {
+        let current_position = 61;
+
+        let move_to_make = Move { dx: 1, dy: -1 };
+
+        let new_pos = move_to_make.get_new_position(current_position);
+
+        assert_eq!(new_pos, Some(54));
+    }
+
+    #[test]
     fn test_illegal_move_1() {
         let current_position = 0;
 

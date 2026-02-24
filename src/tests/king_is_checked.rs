@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
     use crate::{
-        chessboard::{BKING, BPAWN, WKING, WPAWN},
+        chessboard::{BKING, BPAWN, Players, WKING, WPAWN},
         engine::king_is_attacked_by_pawns,
     };
 
@@ -13,7 +13,7 @@ mod tests {
 
         board[9] = BPAWN;
 
-        let is_checked = king_is_attacked_by_pawns(&board, 0);
+        let is_checked = king_is_attacked_by_pawns(&board, 0, Players::White);
 
         assert_eq!(is_checked, true);
     }
@@ -26,7 +26,7 @@ mod tests {
 
         board[8] = BPAWN;
 
-        let is_checked = king_is_attacked_by_pawns(&board, 1);
+        let is_checked = king_is_attacked_by_pawns(&board, 1, Players::White);
 
         assert_eq!(is_checked, true);
     }
@@ -39,7 +39,7 @@ mod tests {
 
         board[54] = BPAWN;
 
-        let is_checked = king_is_attacked_by_pawns(&board, 63);
+        let is_checked = king_is_attacked_by_pawns(&board, 63, Players::Black);
 
         assert_eq!(is_checked, false);
     }
@@ -52,7 +52,7 @@ mod tests {
 
         board[54] = WPAWN;
 
-        let is_checked = king_is_attacked_by_pawns(&board, 63);
+        let is_checked = king_is_attacked_by_pawns(&board, 63, Players::Black);
 
         assert_eq!(is_checked, true);
     }

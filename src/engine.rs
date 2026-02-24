@@ -43,7 +43,25 @@ impl ChessEngine for ChessBoard {
                 new_board.white_king_position
             };
 
-            if !king_is_checked(&new_board.board, king_pos) {
+            if pseudo_legal_move.move_type == MoveType::CastleKingSide
+                || pseudo_legal_move.move_type == MoveType::CastleQueenSide
+            {
+                // We need to also check the squares the king would pass by for any checks as that also invalidates the move
+                let passed_squares = if pseudo_legal_move.move_type == MoveType::CastleKingSide {
+                    [king_pos - 1, king_pos - 2]
+                } else {
+                    [king_pos + 1, king_pos + 2]
+                };
+
+                let pos_1 = king_is_checked(&new_board.board, passed_squares[0], self.side_to_move);
+                let pos_2 = king_is_checked(&new_board.board, passed_squares[1], self.side_to_move);
+
+                if pos_1 || pos_2 {
+                    continue;
+                }
+            }
+
+            if !king_is_checked(&new_board.board, king_pos, self.side_to_move) {
                 legal_moves.push(pseudo_legal_move);
             }
         }
@@ -207,18 +225,22 @@ pub fn single_step_get_pseudo_legal_moves(
     legal_moves
 }
 
-fn king_is_checked(board: &[i8; 64], king_position: usize) -> bool {
+fn king_is_checked(board: &[i8; 64], king_position: usize, king_color: Players) -> bool {
     /* Check per individual pieces, i.e. Diagonal moves: check only Queen, Bishop.. Anti-diagonal moves: check only Queen, Rook.. Pawn attacks */
 
-    king_is_attacked_by_pawns(board, king_position)
-        || king_is_attacked_by_opposing_king(board, king_position)
-        || king_is_attacked_on_diagonals(board, king_position)
-        || king_is_attacked_on_anti_diagonals(board, king_position)
-        || king_is_attacked_by_knights(board, king_position)
+    king_is_attacked_by_pawns(board, king_position, king_color)
+        || king_is_attacked_by_opposing_king(board, king_position, king_color)
+        || king_is_attacked_on_diagonals(board, king_position, king_color)
+        || king_is_attacked_on_anti_diagonals(board, king_position, king_color)
+        || king_is_attacked_by_knights(board, king_position, king_color)
 }
 
-pub fn king_is_attacked_by_pawns(board: &[i8; 64], king_position: usize) -> bool {
-    let (attack_moves, pawn) = if board[king_position].is_positive() {
+pub fn king_is_attacked_by_pawns(
+    board: &[i8; 64],
+    king_position: usize,
+    king_color: Players,
+) -> bool {
+    let (attack_moves, pawn) = if king_color == Players::White {
         (WPAWN_ATTACK_MOVES, BPAWN)
     } else {
         (BPAWN_ATTACK_MOVES, WPAWN)
@@ -235,11 +257,15 @@ pub fn king_is_attacked_by_pawns(board: &[i8; 64], king_position: usize) -> bool
     false
 }
 
-pub fn king_is_attacked_on_diagonals(board: &[i8; 64], king_position: usize) -> bool {
+pub fn king_is_attacked_on_diagonals(
+    board: &[i8; 64],
+    king_position: usize,
+    king_color: Players,
+) -> bool {
     /* No need to check for anything other than queen and bishops of opposing colors */
     let moves = DIAGONAL_MOVES;
 
-    let danger_pieces = if board[king_position].is_positive() {
+    let danger_pieces = if king_color == Players::White {
         [BQUEEN, BBISHOP]
     } else {
         [WQUEEN, WBISHOP]
@@ -269,10 +295,14 @@ pub fn king_is_attacked_on_diagonals(board: &[i8; 64], king_position: usize) -> 
     false
 }
 
-pub fn king_is_attacked_by_opposing_king(board: &[i8; 64], king_position: usize) -> bool {
+pub fn king_is_attacked_by_opposing_king(
+    board: &[i8; 64],
+    king_position: usize,
+    king_color: Players,
+) -> bool {
     let moves = concat_const_arrays(DIAGONAL_MOVES, ANTI_DIAGONAL_MOVES);
 
-    let attack_king = if board[king_position].is_positive() {
+    let attack_king = if king_color == Players::White {
         BKING
     } else {
         WKING
@@ -293,11 +323,15 @@ pub fn king_is_attacked_by_opposing_king(board: &[i8; 64], king_position: usize)
     false
 }
 
-pub fn king_is_attacked_on_anti_diagonals(board: &[i8; 64], king_position: usize) -> bool {
+pub fn king_is_attacked_on_anti_diagonals(
+    board: &[i8; 64],
+    king_position: usize,
+    king_color: Players,
+) -> bool {
     /* No need to check for anything other than queen and bishops of opposing colors */
     let moves = ANTI_DIAGONAL_MOVES;
 
-    let danger_pieces = if board[king_position].is_positive() {
+    let danger_pieces = if king_color == Players::White {
         [BQUEEN, BROOK]
     } else {
         [WQUEEN, WROOK]
@@ -327,8 +361,12 @@ pub fn king_is_attacked_on_anti_diagonals(board: &[i8; 64], king_position: usize
     false
 }
 
-pub fn king_is_attacked_by_knights(board: &[i8; 64], king_position: usize) -> bool {
-    let knight = if board[king_position].is_positive() {
+pub fn king_is_attacked_by_knights(
+    board: &[i8; 64],
+    king_position: usize,
+    king_color: Players,
+) -> bool {
+    let knight = if king_color == Players::White {
         BKNIGHT
     } else {
         WKNIGHT
