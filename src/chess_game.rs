@@ -370,7 +370,7 @@ fn get_corrected_index(index: usize, perspective: Players) -> usize {
         }
         Players::Black => {
             let column = index / 8;
-            let row = index % 8;
+            let row = 7 - (index % 8);
 
             row + (column * 8)
         }
