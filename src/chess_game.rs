@@ -138,8 +138,8 @@ impl ChessGame {
                             self.selected_square = None;
                             return Task::none();
                         }
-
-                        for legal_move in game.legal_moves().iter() {
+                        let legal_moves = game.legal_moves();
+                        for legal_move in legal_moves.iter() {
                             match legal_move.move_type {
                                 MoveType::PawnMove {
                                     promotion_move: Some(_prom_move),
@@ -159,6 +159,11 @@ impl ChessGame {
                                 }
                             }
                         }
+
+                        if legal_moves.is_empty() {
+                            todo!("No legal moves, need a way to check for winner/draw");
+                        }
+
                         Task::none()
                     }
                 },
