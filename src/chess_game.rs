@@ -3,7 +3,7 @@ use crate::chessboard::{
     WKNIGHT, WPAWN, WQUEEN, WROOK,
 };
 use crate::engine::ChessEngine;
-use crate::moves::MoveType;
+use crate::moves::{LegalMove, MoveType};
 use iced::widget::{Row, button, column, container, row, svg, text};
 use iced::{self, ContentFit, Event, Length, Pixels};
 use iced::{Element, Fill, Task};
@@ -16,6 +16,7 @@ pub enum Message {
     ClickedSquare(usize),
     Event(Event),
     SwitchPerspective,
+    PromotionTriggered(i8),
 }
 
 pub struct SvgPieces {
@@ -98,6 +99,7 @@ pub struct ChessGame {
     selected_square: Option<usize>,
     piece_sprite: SvgPieces,
     window_size: Option<iced::Size>,
+    promotion_choice: Option<(Players, usize)>, // Current player color and the target position of the pawn.
 }
 
 impl Default for ChessGame {
@@ -108,6 +110,7 @@ impl Default for ChessGame {
             selected_square: None,
             piece_sprite: SvgPieces::default(),
             window_size: None,
+            promotion_choice: None,
         }
     }
 }
@@ -145,7 +148,14 @@ impl ChessGame {
                                     promotion_move: Some(_prom_move),
                                 } => {
                                     if legal_move.from == from && legal_move.to == square {
-                                        todo!("Implement a way to choose promotion in gui.")
+                                        self.promotion_choice = Some((
+                                            self.game
+                                                .as_ref()
+                                                .expect("Game should exist!")
+                                                .side_to_move,
+                                            square,
+                                        ));
+                                        return Task::none();
                                     }
                                 }
 
@@ -186,6 +196,33 @@ impl ChessGame {
                 }
                 iced::Task::none()
             }
+            Message::PromotionTriggered(desired_piece) => {
+                let mut game = self.game.clone().unwrap();
+
+                let legal_moves = game.legal_moves();
+
+                let wanted_move = self.promotion_choice.expect("MUST EXIST");
+
+                let desired_move = legal_moves
+                    .iter()
+                    .find(|legal_move| matches!(legal_move.move_type, MoveType::PawnMove { promotion_move: Some(p)} if p == desired_piece) && legal_move.to == wanted_move.1);
+
+                if desired_move.is_none() {
+                    eprintln!("Desired move could not be found");
+                    return iced::exit();
+                }
+
+                let desired_move = desired_move.expect("checked above");
+
+                game.make_move(*desired_move);
+
+                self.game = Some(game);
+
+                self.promotion_choice = None;
+                self.selected_square = None;
+
+                iced::Task::none()
+            }
         }
     }
 
@@ -197,12 +234,12 @@ impl ChessGame {
         match &self.game {
             Some(_) => {
                 if let Some(window_size) = self.window_size {
-                    let scale = 0.8;
+                    const SCALE: f32 = 0.8;
 
                     let board_size = if window_size.height > window_size.width {
-                        window_size.width * scale
+                        window_size.width * SCALE
                     } else {
-                        window_size.height * scale
+                        window_size.height * SCALE
                     };
 
                     let square_length = iced::Length::Fixed(board_size / 8.);
@@ -213,11 +250,17 @@ impl ChessGame {
                         button(text("switch perspective")).on_press(Message::SwitchPerspective)
                     ]);
 
-                    let board = render_board(self, square_length);
+                    let game = if self.promotion_choice.is_some() {
+                        let board = render_board(self, square_length, false);
+                        let promotions = render_promotions(self, square_length);
+                        row![board, promotions]
+                    } else {
+                        row![render_board(self, square_length, true)]
+                    };
 
                     column![
                         top_bar,
-                        container(board)
+                        container(game)
                             .height(board_length)
                             .width(board_length)
                             .center(Fill)
@@ -268,6 +311,7 @@ impl ChessGame {
 fn render_board<'a>(
     state: &'a ChessGame,
     square_size: Length,
+    can_update: bool,
 ) -> iced::widget::Column<'a, Message> {
     let mut board_columns = iced::widget::Column::new();
     let mut board_rows = iced::widget::Row::new();
@@ -285,6 +329,7 @@ fn render_board<'a>(
             state.perspective,
             state.selected_square,
             square_size,
+            can_update,
         ));
         if i % 8 == 7 {
             board_columns = board_columns.push(board_rows);
@@ -294,6 +339,36 @@ fn render_board<'a>(
     board_columns
 }
 
+fn render_promotions<'a>(
+    state: &'a ChessGame,
+    square_size: Length,
+) -> iced::widget::Column<'a, Message> {
+    let game = state.game.as_ref().unwrap();
+
+    let pieces_to_render = if game.side_to_move == Players::White {
+        [WQUEEN, WROOK, WBISHOP, WKNIGHT]
+    } else {
+        [BQUEEN, BROOK, BBISHOP, BKNIGHT]
+    };
+
+    let svg_pieces = pieces_to_render.map(|piece| {
+        button(
+            state
+                .piece_sprite
+                .to_iced_svg(piece)
+                .width(square_size)
+                .height(square_size)
+                .content_fit(ContentFit::Cover),
+        )
+        .width(square_size)
+        .height(square_size)
+        .on_press(Message::PromotionTriggered(piece))
+        .into()
+    });
+
+    column(svg_pieces)
+}
+
 fn get_button_from_square<'a>(
     position: usize,
     square: i8,
@@ -301,27 +376,46 @@ fn get_button_from_square<'a>(
     perspective: Players,
     selected_square: Option<usize>,
     square_size: Length,
+    can_update: bool,
 ) -> iced::widget::Button<'a, Message> {
     let correct_index = get_corrected_index(position, perspective);
 
-    let button = match square {
-        WKING | BKING | WQUEEN | BQUEEN | WROOK | BROOK | WBISHOP | BBISHOP | WKNIGHT | BKNIGHT
-        | WPAWN | BPAWN => button(
-            pieces
-                .to_iced_svg(square)
-                .width(square_size)
-                .height(square_size)
-                .content_fit(ContentFit::Cover),
-        )
-        .width(square_size)
-        .height(square_size)
-        .on_press(Message::ClickedSquare(correct_index)),
-
-        EMPTY => button(text(" "))
+    let button = if can_update {
+        match square {
+            WKING | BKING | WQUEEN | BQUEEN | WROOK | BROOK | WBISHOP | BBISHOP | WKNIGHT
+            | BKNIGHT | WPAWN | BPAWN => button(
+                pieces
+                    .to_iced_svg(square)
+                    .width(square_size)
+                    .height(square_size)
+                    .content_fit(ContentFit::Cover),
+            )
             .width(square_size)
             .height(square_size)
             .on_press(Message::ClickedSquare(correct_index)),
-        _ => unreachable!("not allowed as square type/value"),
+
+            EMPTY => button(text(" "))
+                .width(square_size)
+                .height(square_size)
+                .on_press(Message::ClickedSquare(correct_index)),
+            _ => unreachable!("not allowed as square type/value"),
+        }
+    } else {
+        match square {
+            WKING | BKING | WQUEEN | BQUEEN | WROOK | BROOK | WBISHOP | BBISHOP | WKNIGHT
+            | BKNIGHT | WPAWN | BPAWN => button(
+                pieces
+                    .to_iced_svg(square)
+                    .width(square_size)
+                    .height(square_size)
+                    .content_fit(ContentFit::Cover),
+            )
+            .width(square_size)
+            .height(square_size),
+
+            EMPTY => button(text(" ")).width(square_size).height(square_size),
+            _ => unreachable!("not allowed as square type/value"),
+        }
     };
 
     if should_be_light_square(correct_index) {
@@ -332,7 +426,7 @@ fn get_button_from_square<'a>(
                 button::Style::default().with_background(palette.text.scale_alpha(0.5))
             } else {
                 match status {
-                    button::Status::Active => {
+                    button::Status::Active | button::Status::Disabled => {
                         button::Style::default().with_background(palette.text)
                     }
                     button::Status::Hovered => {
@@ -350,7 +444,7 @@ fn get_button_from_square<'a>(
                 button::Style::default().with_background(palette.primary.base.color)
             } else {
                 match status {
-                    button::Status::Active => {
+                    button::Status::Active | button::Status::Disabled => {
                         button::Style::default().with_background(palette.primary.strong.color)
                     }
 
