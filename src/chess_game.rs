@@ -1,9 +1,13 @@
+use std::ops::Shr;
+
 use crate::chessboard::{
     BBISHOP, BKING, BKNIGHT, BPAWN, BQUEEN, BROOK, ChessBoard, EMPTY, Players, WBISHOP, WKING,
     WKNIGHT, WPAWN, WQUEEN, WROOK,
 };
 use crate::engine::ChessEngine;
 use crate::moves::MoveType;
+use iced::Length::{FillPortion, Shrink};
+use iced::widget::rule::FillMode::Percent;
 use iced::widget::{Row, button, column, container, row, svg, text};
 use iced::{self, ContentFit, Event, Length, Padding, Pixels};
 use iced::{Element, Fill, Task};
@@ -247,8 +251,8 @@ impl ChessGame {
 
                     let top_bar: iced::widget::Container<Message> = container(
                         row![
-                            button(text("reset board")).on_press(Message::Reset),
-                            button(text("switch perspective")).on_press(Message::SwitchPerspective)
+                            button(text("Reset board")).on_press(Message::Reset),
+                            button(text("Switch perspective")).on_press(Message::SwitchPerspective)
                         ]
                         .spacing(15),
                     )
@@ -281,29 +285,22 @@ impl ChessGame {
                 }
             }
             None => {
-                let starting_text = container(
-                    text("Starting screen!")
-                        .center()
-                        .width(Fill)
-                        .size(Pixels::from(60)),
-                )
-                .padding(iced::Padding::from([50., 50.]));
+                let starting_text =
+                    container(text("Starting screen!").center().width(Fill).size(78)).padding(50.);
 
-                let start_button = button(text("start game!"))
-                    .width(Fill)
-                    .height(Fill)
+                let start_button = button(text("Start").size(56).center())
+                    .padding(Padding::from([50, 100]))
                     .on_press(Message::Start);
 
-                let exit_button = button(text("Quit"))
-                    .width(Fill)
-                    .height(Fill)
+                let exit_button = button(text("Quit ").size(56).center())
+                    .padding(Padding::from([50, 100]))
                     .on_press(Message::Quit);
 
                 container(column![
                     starting_text,
-                    row![start_button, exit_button].spacing(10)
+                    container(row![start_button, exit_button].spacing(40)).center(Fill)
                 ])
-                .padding(iced::Padding::from([100., 100.]))
+                .padding(iced::Padding::from(100.))
                 .into()
             }
         }
