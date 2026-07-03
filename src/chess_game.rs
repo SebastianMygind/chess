@@ -3,9 +3,9 @@ use crate::chessboard::{
     WKNIGHT, WPAWN, WQUEEN, WROOK,
 };
 use crate::engine::ChessEngine;
-use crate::moves::{LegalMove, MoveType};
+use crate::moves::MoveType;
 use iced::widget::{Row, button, column, container, row, svg, text};
-use iced::{self, ContentFit, Event, Length, Pixels};
+use iced::{self, ContentFit, Event, Length, Padding, Pixels};
 use iced::{Element, Fill, Task};
 
 #[derive(Debug, Clone)]
@@ -245,15 +245,25 @@ impl ChessGame {
                     let square_length = iced::Length::Fixed(board_size / 8.);
                     let board_length = iced::Length::Fixed(board_size);
 
-                    let top_bar: iced::widget::Container<Message> = container(row![
-                        button(text("reset board")).on_press(Message::Reset),
-                        button(text("switch perspective")).on_press(Message::SwitchPerspective)
-                    ]);
+                    let top_bar: iced::widget::Container<Message> = container(
+                        row![
+                            button(text("reset board")).on_press(Message::Reset),
+                            button(text("switch perspective")).on_press(Message::SwitchPerspective)
+                        ]
+                        .spacing(15),
+                    )
+                    .padding(15);
 
                     let game = if self.promotion_choice.is_some() {
                         let board = render_board(self, square_length, false);
                         let promotions = render_promotions(self, square_length);
-                        row![board, promotions]
+                        row![
+                            board,
+                            container(promotions)
+                                .padding(Padding::from(15))
+                                .center_y(board_length)
+                                .center_x(iced::Length::Fixed((board_size / 8.) + 45.))
+                        ]
                     } else {
                         row![render_board(self, square_length, true)]
                     };
@@ -262,7 +272,7 @@ impl ChessGame {
                         top_bar,
                         container(game)
                             .height(board_length)
-                            .width(board_length)
+                            .width(iced::Length::Fixed(board_size * 1.25))
                             .center(Fill)
                     ]
                     .into()
@@ -366,7 +376,7 @@ fn render_promotions<'a>(
         .into()
     });
 
-    column(svg_pieces)
+    column(svg_pieces).spacing(15)
 }
 
 fn get_button_from_square<'a>(

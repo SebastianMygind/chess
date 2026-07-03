@@ -351,7 +351,7 @@ impl Fen for ChessBoard {
 
 impl Default for ChessBoard {
     fn default() -> Self {
-        Self::set_fen_position("rnbqkbn1/pppppp1P/5r2/6p1/8/6PR/PPPPPP2/RNBQKBN1 w Qq - 0 1")
+        Self::set_fen_position(FEN_STARTING_POSITION)
             .expect("Starting position should be valid and parsable!")
     }
 }
