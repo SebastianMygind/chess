@@ -1,15 +1,11 @@
-use std::ops::Shr;
-
 use crate::chessboard::{
     BBISHOP, BKING, BKNIGHT, BPAWN, BQUEEN, BROOK, ChessBoard, EMPTY, Players, WBISHOP, WKING,
     WKNIGHT, WPAWN, WQUEEN, WROOK,
 };
 use crate::engine::ChessEngine;
 use crate::moves::MoveType;
-use iced::Length::{FillPortion, Shrink};
-use iced::widget::rule::FillMode::Percent;
 use iced::widget::{Row, button, column, container, row, svg, text};
-use iced::{self, ContentFit, Event, Length, Padding, Pixels};
+use iced::{self, ContentFit, Event, Length, Padding};
 use iced::{Element, Fill, Task};
 
 #[derive(Debug, Clone)]
